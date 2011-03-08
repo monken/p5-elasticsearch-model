@@ -17,9 +17,7 @@ sub mapping {
         sort { $a->name cmp $b->name }
         grep { $_->is_property }
         $self->get_all_attributes };
-    return { index            => 'cpan',
-             _source          => { compress => \1 },
-             type             => lc( $self->short_name ),
+    return { _source          => { compress => \1 },
              properties       => $props, };
 }
 

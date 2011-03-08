@@ -10,6 +10,9 @@ package MyModel::IRC::User;
 use Moose;
 extends 'MyModel::Twitter::User';
 
+package MyIndexTrait;
+use Moose::Role;
+
 package MyModel;
 use Moose;
 use ElasticSearch::Model;
@@ -18,7 +21,7 @@ analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
 analyzer fulltext  => ( type      => 'snowball', language => 'English' );
 
 index twitter => ( namespace => 'MyModel::Twitter' );
-index irc     => ( namespace => 'MyModel::IRC' );
+index irc     => ( namespace => 'MyModel::IRC', traits => [qw(MyIndexTrait)] );
 
 __PACKAGE__->meta->make_immutable;
 
@@ -29,6 +32,7 @@ use warnings;
 
 ok( my $model = MyModel->new(), 'Created object ok' );
 my $meta = $model->meta;
+ok( $model->does('ElasticSearch::Model::Role'), 'Does role' );
 
 is_deeply( [ $meta->get_index_list ],
            [ 'irc', 'twitter' ],
@@ -49,5 +53,11 @@ isa_ok( $idx, 'ElasticSearch::Index' );
 is_deeply( $idx->types,
            { user => MyModel::IRC::User->meta },
            'Types loaded ok' );
+
+ok($idx->does('MyIndexTrait'), 'Trait has been applied' );
+
+isa_ok( $idx->model->es, 'ElasticSearch' );
+
+$model->deploy;
 
 done_testing;

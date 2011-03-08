@@ -3,25 +3,29 @@ use Moose           ();
 use Moose::Exporter ();
 use ElasticSearch::Index;
 
-Moose::Exporter->setup_import_methods(
+my (undef, undef, $init_meta) =
+  Moose::Exporter->build_import_methods(
+         with_meta       => [qw(index analyzer tokenizer filter)],
+         install         => [qw(import unimport)],
+         class_metaroles => { class => ['ElasticSearch::Model::Trait::Class'] },
+  );
 
-    #as_is           => [qw(index analyzer tokenizer filter)],
-    with_meta       => [qw(index analyzer tokenizer filter)],
-    class_metaroles => {
-        class => ['ElasticSearch::Model::Trait::Class'],
-
-        #attribute => [ 'ElasticSearch::Document::Trait::Attribute',
-        #               'MooseX::Attribute::Deflator::Meta::Role::Attribute'
-        #]
-    }, );
+sub init_meta {
+    my $class = shift;
+    my %p = @_;
+    Moose::Util::ensure_all_roles( $p{for_class}, qw(ElasticSearch::Model::Role) );
+    $class->$init_meta(%p);
+}
 
 sub index {
     my ( $self, $name, @rest ) = @_;
     if ( ref $name ) {
         my $options = $name->meta->get_index( $rest[0] );
-        return ElasticSearch::Index->new( $rest[0] => ( %$options, model => $name ) );
+        my $index = ElasticSearch::Index->new( name => $rest[0], %$options, model => $name );
+        $options->{types} = $index->types;
+        return $index;
     } else {
-        $self->add_index( $name, {@rest} );
+        return $self->add_index( $name, {@rest} );
     }
 }
 
@@ -38,7 +42,6 @@ sub filter {
 }
 
 1;
-
 
 __END__
 
@@ -68,3 +71,43 @@ __END__
       date => DateTime->now,
   });
 
+=head1 DSL
+
+=head2 index
+
+ index twitter => ( namespace => 'MyNamespace' );
+
+Adds an index to the model. By default there is a C<default>
+index, which will be removed once you add custom indices.
+
+See L<ElasticSearch::Index/ATTRIBUTES> for available options.
+
+=head2 analyzer
+
+=head2 tokenizer
+
+=head2 filter
+
+ analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
+
+Adds analyzers, tokenizers or filters to all indices. They can
+then be used in L<ElasticSearch::Document> classes.
+
+=head1 METHODS
+
+=head2 index
+
+Returns a L<ElasticSearch::Index> object.
+
+=head2 deploy
+
+C<deploy> will remove all indices and then insert them one
+after the other. See L</upgrade> for an upgrade routine.
+
+B<< All data will be lost during C<deploy> >>
+
+=head2 upgrade
+
+C<upgrade> will try add non-existing indices and update the
+mapping on existing indices. Depending on the changes to
+the mapping this might or might not succeed.

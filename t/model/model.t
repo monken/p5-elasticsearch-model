@@ -48,7 +48,7 @@ is_deeply( $idx->types,
 
 ok( $idx = $idx->model->index('irc'), 'Switch index' );
 
-isa_ok( $idx, 'ElasticSearch::Index' );
+isa_ok( $idx, 'ElasticSearch::Model::Index' );
 
 is_deeply( $idx->types,
            { user => MyModel::IRC::User->meta },
@@ -58,6 +58,11 @@ ok($idx->does('MyIndexTrait'), 'Trait has been applied' );
 
 isa_ok( $idx->model->es, 'ElasticSearch' );
 
-$model->deploy;
+isa_ok($idx->type('user'), 'ElasticSearch::Document::Set');
+
+is_deeply($idx->type('user')->index, $idx, 'MyModel::IRC::User');
+
+
+#$model->deploy;
 
 done_testing;

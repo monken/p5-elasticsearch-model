@@ -5,7 +5,7 @@ use Carp;
 use Scope::Guard;
 
 has bulk_size => ( isa => 'Int', default => 10, is => 'rw' );
-
+has set_class => ( is => 'ro', default => 'ElasticSearch::Document::Set' );
 sub bulk_commit {
     
 }
@@ -13,7 +13,7 @@ sub bulk_commit {
 sub mapping {
     my $self = shift;
     my $props =
-      { map { $_->name => $_->es_properties }
+      { map { $_->name => $_->build_property }
         sort { $a->name cmp $b->name }
         grep { $_->is_property }
         $self->get_all_attributes };

@@ -1,7 +1,8 @@
 package ElasticSearch::Model;
+# ABSTRACT: Extensible and flexible model for ElasticSearch
 use Moose           ();
 use Moose::Exporter ();
-use ElasticSearch::Index;
+use ElasticSearch::Model::Index;
 
 my (undef, undef, $init_meta) =
   Moose::Exporter->build_import_methods(
@@ -21,7 +22,7 @@ sub index {
     my ( $self, $name, @rest ) = @_;
     if ( ref $name ) {
         my $options = $name->meta->get_index( $rest[0] );
-        my $index = ElasticSearch::Index->new( name => $rest[0], %$options, model => $name );
+        my $index = ElasticSearch::Model::Index->new( name => $rest[0], %$options, model => $name );
         $options->{types} = $index->types;
         return $index;
     } else {
@@ -47,10 +48,6 @@ __END__
 
 =head1 SYNOPSIS
 
- package MyModel::User;
- use Moose;
- use ElasticSearch::Document;
-
  package MyModel::Tweet;
  use Moose;
  use ElasticSearch::Document;
@@ -71,6 +68,22 @@ __END__
       date => DateTime->now,
   });
 
+=head1 DESCRIPTION
+
+This an ElasticSearch to Moose mapper which hides the REST api
+behind object-oriented api calls. ElasticSearch types and indices
+are defined using Moose classes and a flexible DSL.
+
+Deployment statements for ElasticSearch can be build dynamically
+using these classes. Results from ElasticSearch inflate automatically
+to the corresponding Moose classes.
+
+The powerful search API makes the tedious task of building 
+ElasticSearch queries a lot easier.
+
+B<< The L<ElasticSearch::Model::Tutorial> is probably the best place
+to start! >>
+
 =head1 DSL
 
 =head2 index
@@ -80,7 +93,7 @@ __END__
 Adds an index to the model. By default there is a C<default>
 index, which will be removed once you add custom indices.
 
-See L<ElasticSearch::Index/ATTRIBUTES> for available options.
+See L<ElasticSearch::Model::Index/ATTRIBUTES> for available options.
 
 =head2 analyzer
 
@@ -91,13 +104,15 @@ See L<ElasticSearch::Index/ATTRIBUTES> for available options.
  analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
 
 Adds analyzers, tokenizers or filters to all indices. They can
-then be used in L<ElasticSearch::Document> classes.
+then be used in attributes of L<ElasticSearch::Document> classes.
+
+=head1 CONSTRUCTOR
 
 =head1 METHODS
 
 =head2 index
 
-Returns a L<ElasticSearch::Index> object.
+Returns a L<ElasticSearch::Model::Index> object.
 
 =head2 deploy
 
@@ -108,6 +123,6 @@ B<< All data will be lost during C<deploy> >>
 
 =head2 upgrade
 
-C<upgrade> will try add non-existing indices and update the
+C<upgrade> will try to add non-existing indices and update the
 mapping on existing indices. Depending on the changes to
 the mapping this might or might not succeed.

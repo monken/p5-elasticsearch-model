@@ -8,48 +8,24 @@ use Moose::Exporter;
 use ElasticSearch::Document::Trait::Class;
 use ElasticSearch::Document::Trait::Attribute;
 use ElasticSearch::Document::Types qw();
-use JSON::XS;
-use Digest::SHA1;
-use List::MoreUtils ();
-use Carp;
 
-Moose::Exporter->setup_import_methods(
-                    as_is           => [qw(_build_es_id put _put)],
-                    class_metaroles => {
-                        class     => ['ElasticSearch::Document::Trait::Class'],
-                        attribute => [
-                            'ElasticSearch::Document::Trait::Attribute',
+
+my ( undef, undef, $init_meta ) =
+  Moose::Exporter->build_import_methods(
+         install => [qw(import unimport)],
+         class_metaroles => {
+             class     => ['ElasticSearch::Document::Trait::Class'],
+             attribute => [ 'ElasticSearch::Document::Trait::Attribute',
                             'MooseX::Attribute::Deflator::Meta::Role::Attribute'
-                        ]
-                    }, );
+             ]
+         }, );
 
-
-sub put {
-    my ( $self, $es ) = @_;
-    my $id = $self->meta->get_id_attribute;
-    return $es->index( $self->_index );
-}
-
-sub _put {
-    my ($self) = @_;
-    my $id = $self->meta->get_id_attribute;
-
-    return ( index => 'cpan',
-             type  => $self->meta->short_name,
-             $id ? ( id => $id->get_value($self) ) : (),
-             data => $self->meta->get_data($self), );
-}
-
-sub _build_es_id {
-    my $self = shift;
-    my $id   = $self->meta->get_id_attribute;
-    carp "Need an arrayref of fields for the id, not " . $id->id
-      unless ( ref $id->id eq 'ARRAY' );
-    my @fields = map { $self->meta->get_attribute($_) } @{ $id->id };
-    my $digest = join( "\0", map { $_->get_value($self) } @fields );
-    $digest = Digest::SHA1::sha1_base64($digest);
-    $digest =~ tr/[+\/]/-_/;
-    return $digest;
+sub init_meta {
+    my $class = shift;
+    my %p     = @_;
+    Moose::Util::ensure_all_roles( $p{for_class},
+                                   qw(ElasticSearch::Document::Role) );
+    $class->$init_meta(%p);
 }
 
 1;

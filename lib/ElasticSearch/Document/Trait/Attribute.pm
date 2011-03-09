@@ -15,7 +15,7 @@ has analyzer => ( is => 'ro', isa => 'Str' );
 
 sub is_property { shift->property }
 
-sub es_properties {
+sub build_property {
     my $self = shift;
     return { ElasticSearch::Document::Mapping::maptc($self, $self->type_constraint) };
 }
@@ -24,7 +24,7 @@ before _process_options => sub {
     my ( $self, $name, $options ) = @_;
     $options->{required} = 1    unless ( exists $options->{required} );
     $options->{is}       = 'ro' unless ( exists $options->{is} );
-    %$options = ( builder => '_build_es_id', lazy => 1, %$options )
+    %$options = ( builder => 'build_id', lazy => 1, %$options )
       if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
 };
 
@@ -35,6 +35,12 @@ __END__
 =head1 ATTRIBUTES
 
 B<< All attributes are C<required> and C<ro> by default. >>
+
+=head2 property
+
+This defaults to C<1> and marks the attribute as ElasticSearch
+property and thus will be added to mapping. If you set this
+to C<0> the attribute will act as a traditional Moose attribute.
 
 =head2 id
 
@@ -73,3 +79,12 @@ Defaults to C<yes>.
 =head2 dynamic
 
 =head2 analyzer
+
+=head1 METHODS
+
+=head2 build_id
+
+=head2 build_property
+
+=head1 EXTENDING
+

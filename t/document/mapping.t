@@ -24,8 +24,7 @@ use warnings;
 
 is_deeply(
     MyClass->meta->mapping,
-    {  index      => 'cpan',
-       type       => 'myclass',
+    {  
        _source    => { compress => \1 },
        properties => {
            date => { 'store' => 'yes',

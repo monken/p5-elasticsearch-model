@@ -1,8 +1,7 @@
 package ElasticSearch::Document::Trait::Attribute;
 use Moose::Role;
 use ElasticSearch::Document::Mapping;
-
-has property => ( is => 'ro', isa => 'Bool', default => 1 );
+with 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute';
 
 has id => ( is => 'ro', isa => 'Bool|ArrayRef', default => 0 );
 has index  => ( is => 'ro' );
@@ -12,8 +11,6 @@ has type   => ( is => 'ro', isa        => 'Str', default => 'string' );
 has parent => ( is => 'ro', isa        => 'Bool', default => 0 );
 has dynamic => ( is => 'ro', isa        => 'Bool', default => 1 );
 has analyzer => ( is => 'ro', isa => 'Str' );
-
-sub is_property { shift->property }
 
 sub build_property {
     my $self = shift;
@@ -26,6 +23,24 @@ before _process_options => sub {
     $options->{is}       = 'ro' unless ( exists $options->{is} );
     %$options = ( builder => 'build_id', lazy => 1, %$options )
       if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
+    $options->{traits} ||= [];
+    push(@{$options->{traits}}, 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute')
+        if($options->{property} || !exists $options->{property});
+    
+};
+
+after _process_options => sub {
+    my ( $class, $name, $options ) = @_;
+    if (    $options->{required}
+         && !$options->{builder}
+         && !defined $options->{default} )
+    {
+        $options->{lazy}     = 1;
+        $options->{required} = 1;
+        $options->{default}  = sub {
+            confess "Attribute $name must be provided before calling reader";
+        };
+    }
 };
 
 1;

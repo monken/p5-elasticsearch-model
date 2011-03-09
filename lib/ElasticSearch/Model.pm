@@ -1,5 +1,5 @@
 package ElasticSearch::Model;
-# ABSTRACT: Extensible and flexible model for ElasticSearch
+# ABSTRACT: Extensible and flexible model for ElasticSearch based on Moose
 use Moose           ();
 use Moose::Exporter ();
 use ElasticSearch::Model::Index;
@@ -76,7 +76,8 @@ are defined using Moose classes and a flexible DSL.
 
 Deployment statements for ElasticSearch can be build dynamically
 using these classes. Results from ElasticSearch inflate automatically
-to the corresponding Moose classes.
+to the corresponding Moose classes. Furthermore, it provides
+sensible defaults.
 
 The powerful search API makes the tedious task of building 
 ElasticSearch queries a lot easier.

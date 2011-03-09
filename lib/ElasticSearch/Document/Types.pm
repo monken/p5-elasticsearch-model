@@ -3,6 +3,7 @@ use List::MoreUtils ();
 use DateTime::Format::Epoch::Unix;
 use DateTime::Format::ISO8601;
 use ElasticSearch;
+use MooseX::Attribute::Deflator;
 
 use MooseX::Types -declare => [
     qw(
@@ -67,6 +68,8 @@ deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } };
 deflate 'ScalarRef', via { $$_ };
 deflate 'DateTime', via { $_->iso8601 };
 deflate ESDateTime, via { $_->iso8601 };
+inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
+inflate ESDateTime, via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
 deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] };
 no MooseX::Attribute::Deflator;
 

@@ -9,16 +9,29 @@ use ElasticSearch::Document::Trait::Class;
 use ElasticSearch::Document::Trait::Attribute;
 use ElasticSearch::Document::Types qw();
 
+my ( undef, undef, $init_meta ) = Moose::Exporter->build_import_methods(
+    install         => [qw(import unimport)],
+    with_meta       => [qw(has)],
+    class_metaroles => {
+        constructor =>
+          ['MooseX::Attribute::LazyInflator::Meta::Role::Method::Constructor'],
+        class     => ['ElasticSearch::Document::Trait::Class']
+    }, );
 
-my ( undef, undef, $init_meta ) =
-  Moose::Exporter->build_import_methods(
-         install => [qw(import unimport)],
-         class_metaroles => {
-             class     => ['ElasticSearch::Document::Trait::Class'],
-             attribute => [ 'ElasticSearch::Document::Trait::Attribute',
-                            'MooseX::Attribute::Deflator::Meta::Role::Attribute'
-             ]
-         }, );
+sub has {
+    my $meta = shift;
+    my $name = shift;
+
+    Moose->throw_error('Usage: has \'name\' => ( key => value, ... )')
+      if @_ % 2 == 1;
+    my %options = ( definition_context => Moose::Util::_caller_info(), @_ );
+    $options{traits} ||= [];
+    push(@{$options{traits}}, 'ElasticSearch::Document::Trait::Attribute')
+        if($options{property} || !exists $options{property});
+    delete $options{property};
+    my $attrs = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
+    $meta->add_attribute( $_, %options ) for @$attrs;
+}
 
 sub init_meta {
     my $class = shift;

@@ -55,7 +55,7 @@ Also, you don't have to keep track of incrementing document ids.
 In the User class, the C<nickname> attribute acts as id. Since it does not
 depend on the value of any other attribute, the id matches the nickname.
 
-ElasticSearch search will assign a random id to the document if there is
+ElasticSearch will assign a random id to the document if there is
 no id attribute.
 
 =head1 MAPPING
@@ -97,28 +97,62 @@ See L<ElasticSearch::Model/CONSTRUCTOR> for more information.
 
 =head1 INDEXING
 
+Indexing describes the process of adding documents to types.
+
  use DateTime;
  
  my $twitter = $model->index('twitter');
- $twitter->type('tweet')->put({
+ my $timestamp = DateTime->now;
+ my $tweet = $twitter->type('tweet')->put({
      user => 'mo',
-     post_date => DateTime->now,
+     post_date => $timestamp,
      message => 'Elastic baby!',
  }, { refresh => 1 });
 
  $twitter->type('tweet')->count; # 1
+
+The first parameter contains the property/values pairs. The C<post_date>
+property is special because it is a L<DateTime> object. Obects are
+being deflated prior to insertion. This is handled by 
+L<MooseX::Attribute::Deflator> and is configured in 
+L<ElasticSearch::Document::Types>. You can easily add deflators
+for other objects.
 
 The second parameter to L<ElasticSearch::Document::Set/put> tells
 ElasticSearch to refresh the index immediately. Otherwise it can
 take up to one second for the server to refresh and the subsequent
 call to L<ElasticSearch::Document::Set/count> will return C<0>.
 
-If you index large numbers of documents, it is adviced to call
+If you index large numbers of documents, it is advised to call
 L<ElasticSearch::Model::Index/refresh> once you are finished and not
 on every put.
 
-TBD
+=head1 RETRIEVING
+
+Documents can be retrieved either with their id or by providing
+the properties that define the id:
+
+ my $tweet_copy = $twitter->type('tweet')->get($tweet->id);
+ # or
+ my $tweet_copy = $twitter->type('tweet')->get({
+     user => 'mo',
+     post_date => $timestamp,
+ });
+
+Objects that have been deflated (i.e. C<post_date>) will be inflated
+again. Thus, C<< $tweet_copy->post_date >> is a DateTime object
+again.
+
+If you don't really care about objects or need extra speed, you can set
+L<ElasticSearch::Documents::Set/inflate> to C<0>. This will return 
+the raw response from ElasticSearch.
+
+ $twitter->type('tweet')->inflate(0)->get($tweet->id);
 
 =head1 SEARCHING
 
 ElasticSearch is I<You know, for Search>. TBD
+
+=head1 COMPLEX EXAMPLE
+
+TBD

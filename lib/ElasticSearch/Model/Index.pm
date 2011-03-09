@@ -53,7 +53,7 @@ sub type {
     Class::MOP::load_class($class);
     return $class->new(
         index => $self,
-        type => $self->get_type($type),
+        type_class => $self->get_type($type),
     );
 }
 
@@ -75,7 +75,7 @@ sub deployment_statement {
     return $deploy;
 }
 
-sub index {
+sub refresh {
     my $self = shift;
     $self->es->refresh_index( index => $self->name );
 }

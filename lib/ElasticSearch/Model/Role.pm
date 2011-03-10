@@ -24,11 +24,13 @@ sub deploy {
                        cmd    => "/$name",
                        data   => $dep,
                      } );
+        while(my($k,$v) = each %$mapping) {
         $t->request(
                      { method => 'PUT',
-                       cmd    => "/$name/_mapping",
-                       data   => $mapping,
+                       cmd    => "/$name/$k/_mapping",
+                       data   => { $k => $v },
                      } );
+                 }
     }
     return 1;
 }

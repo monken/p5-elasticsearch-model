@@ -19,8 +19,6 @@ sub build_property {
 
 before _process_options => sub {
     my ( $self, $name, $options ) = @_;
-    $options->{required} = 1    unless ( exists $options->{required} );
-    $options->{is}       = 'ro' unless ( exists $options->{is} );
     %$options = ( builder => 'build_id', lazy => 1, %$options )
       if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
     $options->{traits} ||= [];

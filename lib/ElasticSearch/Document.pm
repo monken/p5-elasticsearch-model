@@ -29,6 +29,9 @@ sub has {
     push(@{$options{traits}}, 'ElasticSearch::Document::Trait::Attribute')
         if($options{property} || !exists $options{property});
     delete $options{property};
+    
+    $options{required} = 1    unless ( exists $options{required} );
+    $options{is}       = 'ro' unless ( exists $options{is} );
     my $attrs = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
     $meta->add_attribute( $_, %options ) for @$attrs;
 }

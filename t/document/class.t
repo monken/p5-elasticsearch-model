@@ -2,8 +2,9 @@ package Foo;
 use Moose;
 use ElasticSearch::Document;
 
-has some => ( is => 'ro' );
-has name => ( is => 'ro', id => 1 );
+has some => ( );
+has name => ( id => 1 );
+has more => ( property => 0 );
 
 use Test::More;
 use strict;

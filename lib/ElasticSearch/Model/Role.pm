@@ -17,10 +17,17 @@ sub deploy {
     foreach my $name ( $self->meta->get_index_list ) {
         my $index = $self->index($name);
         eval { $t->request( { method => 'DELETE', cmd => "/$name", } ); };
+        my $dep     = $index->deployment_statement;
+        my $mapping = delete $dep->{mappings};
         $t->request(
                      { method => 'PUT',
                        cmd    => "/$name",
-                       data   => $index->deployment_statement,
+                       data   => $dep,
+                     } );
+        $t->request(
+                     { method => 'PUT',
+                       cmd    => "/$name/_mapping",
+                       data   => $mapping,
                      } );
     }
     return 1;

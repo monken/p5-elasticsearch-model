@@ -11,6 +11,7 @@ has type   => ( is => 'ro', isa        => 'Str', default => 'string' );
 has parent => ( is => 'ro', isa        => 'Bool', default => 0 );
 has dynamic => ( is => 'ro', isa        => 'Bool', default => 1 );
 has analyzer => ( is => 'ro', isa => 'Str' );
+has term_vector => ( is => 'ro', isa => 'Str' );
 
 sub build_property {
     my $self = shift;

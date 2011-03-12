@@ -15,7 +15,7 @@ has default  => ();
 has date     => ( isa => 'DateTime' );
 has loc      => ( isa => Location );
 has res      => ( isa => Resources );
-has abstract => ( analyzer => 'lowercase' );
+has abstract => ( analyzer => 'lowercase', term_vector => 'with_positions_offsets' );
 
 package main;
 use Test::More;
@@ -43,7 +43,8 @@ is_deeply(
                        'index'  => 'analyzed',
                        analyzer => 'lowercase',
                        'store'  => 'yes',
-                       'type'   => 'string'
+                       'type'   => 'string',
+                       term_vector => 'with_positions_offsets',
                    },
                    raw => { 'index' => 'not_analyzed',
                             'store' => 'yes',

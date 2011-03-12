@@ -30,6 +30,7 @@ $MAPPING{Any} = sub {
 
 $MAPPING{Str} = sub {
     my ( $attr, $tc ) = @_;
+    my %term = $attr->term_vector ? ( term_vector => $attr->term_vector ) : ();
     if($attr->index && $attr->index eq 'analyzed' || $attr->analyzer) {
         return (
             type   => 'multi_field',
@@ -38,6 +39,7 @@ $MAPPING{Str} = sub {
                                                index => 'analyzed',
                                                $attr->boost ? ( boost => $attr->boost ) : (),
                                                type  => $attr->type,
+                                               %term,
                                                analyzer => $attr->analyzer || 'standard',
                               },
                               raw => { store => $attr->store,
@@ -46,7 +48,7 @@ $MAPPING{Str} = sub {
                                        type  => $attr->type
                               },});
     }
-    return ( index => 'not_analyzed', maptc($attr, $tc->parent) );
+    return ( index => 'not_analyzed', %term, maptc($attr, $tc->parent) );
 };
 
 $MAPPING{Num} = sub {

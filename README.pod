@@ -1,1 +1,1 @@
-lib/ElasticSearch/Model.pm
+lib/ElasticSearchX/Model.pm

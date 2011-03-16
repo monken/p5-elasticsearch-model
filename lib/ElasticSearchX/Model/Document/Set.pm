@@ -1,9 +1,9 @@
-package ElasticSearch::Document::Set;
+package ElasticSearchX::Model::Document::Set;
 use Moose;
 use MooseX::ChainedAccessors;
-use ElasticSearch::Document::Types qw(:all);
+use ElasticSearchX::Model::Document::Types qw(:all);
 
-has type_class => ( is => 'ro', required => 1 );
+has type => ( is => 'ro', required => 1 );
 has index => ( is => 'ro', required => 1, handles => [qw(es model)] );
 
 has query => ( isa        => 'HashRef',
@@ -15,19 +15,24 @@ has filter => ( isa    => 'HashRef',
                 is     => 'rw',
                 traits => [qw(Chained)] );
 
+has filtered => ( isa => 'Bool', is => 'rw', traits  => [qw(Chained)] );
+
+
 has [qw(from size)] => ( isa => 'Int', is => 'rw', traits => [qw(Chained)] );
 
-has sort => ( isa     => 'ArrayRef',
-              traits  => [qw( Array)],
-              handles => { add_sort => 'push' } );
+has sort => ( isa     => 'ArrayRef', is => 'rw',
+              traits  => [qw(Chained)] );
 
-has fields => ( isa     => 'ArrayRef',
-                traits  => [qw( Array)],
-                handles => { add_field => 'push' } );
+sub add_sort { push(@{$_[0]->sort}, $_[1]); return $_[0]; }
+
+has fields => ( isa     => 'ArrayRef', is => 'rw',
+                traits  => [qw(Chained)] );
+
+sub add_field { push(@{$_[0]->fields}, $_[1]); return $_[0]; }
 
 has mixin => ( isa => 'HashRef', is => 'rw', traits => [qw(Chained)] );
 
-has type => ( isa => QueryType, is => 'rw', traits => [qw(Chained)] );
+has query_type => ( isa => QueryType, is => 'rw', traits => [qw(Chained)] );
 
 has version => ( isa => 'Bool', is => 'rw' );
 
@@ -42,7 +47,7 @@ sub as_query { }
 
 sub put {
     my ( $self, $args, $qs ) = @_;
-    my $doc = $self->type_class->new_object( %$args, index => $self->index );
+    my $doc = $self->type->new_object( %$args, index => $self->index );
     $doc->put($qs);
     return $doc;
 }
@@ -58,18 +63,18 @@ sub get {
     my ( $self, $args ) = @_;
     my ($id);
     my ( $index, $type ) =
-      ( $self->index->name, $self->type_class->short_name );
+      ( $self->index->name, $self->type->short_name );
 
     if ( !ref $args ) {
         $id = $args;
-    } elsif ( my $pk = $self->type_class->get_id_attribute ) {
+    } elsif ( my $pk = $self->type->get_id_attribute ) {
         my $found = 0;
         my @fields =
-          map { $self->type_class->find_attribute_by_name($_) } @{ $pk->id };
+          map { $self->type->find_attribute_by_name($_) } @{ $pk->id };
         map { $found++ } grep { exists $args->{ $_->name } } @fields;
         die "All id fields need to be supplied to get: @fields"
           unless ( @fields == $found );
-        $id = ElasticSearch::Model::Util::digest(
+        $id = ElasticSearchX::Model::Util::digest(
             map {
                     $_->has_deflator
                   ? $_->deflate( $self, $args->{ $_->name } )
@@ -88,7 +93,7 @@ sub get {
 sub all {
     my $self = shift;
     my ( $index, $type ) =
-      ( $self->index->name, $self->type_class->short_name );
+      ( $self->index->name, $self->type->short_name );
     my $res =
       $self->es->transport->request(
                                      { method => 'POST',
@@ -105,7 +110,7 @@ sub all {
 sub count {
     my $self = shift;
     my ( $index, $type ) =
-      ( $self->index->name, $self->type_class->short_name );
+      ( $self->index->name, $self->type->short_name );
     my $res =
       $self->es->transport->request(
                                      { method => 'POST',

@@ -1,6 +1,6 @@
-package ElasticSearch::Document::Role;
+package ElasticSearchX::Model::Document::Role;
 use Moose::Role;
-use ElasticSearch::Model::Util ();
+use ElasticSearchX::Model::Util ();
 use JSON::XS;
 use Digest::SHA1;
 use List::MoreUtils ();
@@ -10,7 +10,7 @@ has _inflated_attributes => ( is => 'rw', isa => 'HashRef', lazy => 1, default =
 sub _lazy_attributes {}
 after _inflated_attributes => sub { warn "someone called" };
 
-has index => ( isa      => 'ElasticSearch::Model::Index',
+has index => ( isa      => 'ElasticSearchX::Model::Index',
                is       => 'ro' );
 
 sub put {
@@ -35,7 +35,7 @@ sub build_id {
     carp "Need an arrayref of fields for the id, not " . $id->id
       unless ( ref $id->id eq 'ARRAY' );
     my @fields = map { $self->meta->get_attribute($_) } @{ $id->id };
-    return ElasticSearch::Model::Util::digest(map {
+    return ElasticSearchX::Model::Util::digest(map {
             $_->has_deflator ? $_->deflate($self) : $_->get_value($self)
        } @fields);
 }

@@ -1,7 +1,7 @@
 use Test::Most;
 use strict;
 use warnings;
-use ElasticSearch::Document::Types qw(:all);
+use ElasticSearchX::Model::Document::Types qw(:all);
 
 is_deeply(Location->coerce('12,13'), [13,12]);
 is_deeply(Location->coerce({ lat => 12, lon => 13 }), [13,12]);

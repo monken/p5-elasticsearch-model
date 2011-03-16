@@ -1,4 +1,4 @@
-package ElasticSearch::Document::Types;
+package ElasticSearchX::Model::Document::Types;
 use List::MoreUtils ();
 use DateTime::Format::Epoch::Unix;
 use DateTime::Format::ISO8601;

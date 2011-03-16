@@ -1,4 +1,4 @@
-package ElasticSearch::Model::Index;
+package ElasticSearchX::Model::Index;
 use Moose;
 use Module::Find ();
 
@@ -53,7 +53,7 @@ sub type {
     Class::MOP::load_class($class);
     return $class->new(
         index => $self,
-        type_class => $self->get_type($type),
+        type => $self->get_type($type),
     );
 }
 
@@ -94,7 +94,7 @@ name of the model.
 
 =head2 types
 
-An arrayref of L<ElasticSearch::Document> meta objects.
+An arrayref of L<ElasticSearchX::Model::Document> meta objects.
 
 =head2 traits
 

@@ -1,11 +1,11 @@
-package ElasticSearch::Document::Trait::Class;
+package ElasticSearchX::Model::Document::Trait::Class;
 use Moose::Role;
 use List::Util ();
 use Carp;
 use Scope::Guard;
 
 has bulk_size => ( isa => 'Int', default => 10, is => 'rw' );
-has set_class => ( is => 'ro', default => 'ElasticSearch::Document::Set' );
+has set_class => ( is => 'ro', default => 'ElasticSearchX::Model::Document::Set' );
 
 sub bulk_commit {
 
@@ -34,7 +34,7 @@ sub get_id_attribute {
 }
 
 sub get_all_properties {
-    grep { $_->does('ElasticSearch::Document::Trait::Attribute') }
+    grep { $_->does('ElasticSearchX::Model::Document::Trait::Attribute') }
       shift->get_all_attributes;
 }
 

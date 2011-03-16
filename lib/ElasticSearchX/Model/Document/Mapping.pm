@@ -1,4 +1,4 @@
-package ElasticSearch::Document::Mapping;
+package ElasticSearchX::Model::Document::Mapping;
 use strict;
 use warnings;
 use Moose::Util::TypeConstraints;
@@ -100,7 +100,7 @@ $MAPPING{'MooseX::Types::Structured::Optional[]'} = sub {
     return maptc($attr, $constraint->type_parameter);
 };
 
-$MAPPING{'ElasticSearch::Document::Types::Location'} = sub {
+$MAPPING{'ElasticSearchX::Model::Document::Types::Location'} = sub {
     my ( $attr, $tc ) = @_;
     my %mapping = maptc($attr, $tc->parent);
     delete $mapping{$_} for(qw(index store));

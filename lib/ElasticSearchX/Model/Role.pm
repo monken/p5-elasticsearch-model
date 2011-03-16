@@ -1,7 +1,7 @@
-package ElasticSearch::Model::Role;
+package ElasticSearchX::Model::Role;
 use Moose::Role;
 use ElasticSearch;
-use ElasticSearch::Model::Index;
+use ElasticSearchX::Model::Index;
 
 has es => ( is => 'rw', lazy_build => 1 );
 

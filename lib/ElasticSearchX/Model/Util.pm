@@ -1,4 +1,4 @@
-package ElasticSearch::Model::Util;
+package ElasticSearchX::Model::Util;
 use strict;
 use warnings;
 

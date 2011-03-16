@@ -1,14 +1,14 @@
 package MyModel::User;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 package MyModel::Tweet;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 package MyModel;
 use Moose;
-use ElasticSearch::Model;
+use ElasticSearchX::Model;
 
 __PACKAGE__->meta->make_immutable;
 

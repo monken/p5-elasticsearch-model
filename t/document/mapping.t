@@ -1,7 +1,7 @@
 package MyClass;
 use Moose;
-use ElasticSearch::Document;
-use ElasticSearch::Document::Types qw(:all);
+use ElasticSearchX::Model::Document;
+use ElasticSearchX::Model::Document::Types qw(:all);
 use MooseX::Types -declare => ['Resources'];
 use MooseX::Types::Structured qw(Dict Tuple Optional);
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef Undef/;

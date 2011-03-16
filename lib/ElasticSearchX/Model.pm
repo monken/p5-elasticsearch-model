@@ -1,20 +1,20 @@
-package ElasticSearch::Model;
+package ElasticSearchX::Model;
 # ABSTRACT: Extensible and flexible model for ElasticSearch based on Moose
 use Moose           ();
 use Moose::Exporter ();
-use ElasticSearch::Model::Index;
+use ElasticSearchX::Model::Index;
 
 my (undef, undef, $init_meta) =
   Moose::Exporter->build_import_methods(
          with_meta       => [qw(index analyzer tokenizer filter)],
          install         => [qw(import unimport)],
-         class_metaroles => { class => ['ElasticSearch::Model::Trait::Class'] },
+         class_metaroles => { class => ['ElasticSearchX::Model::Trait::Class'] },
   );
 
 sub init_meta {
     my $class = shift;
     my %p = @_;
-    Moose::Util::ensure_all_roles( $p{for_class}, qw(ElasticSearch::Model::Role) );
+    Moose::Util::ensure_all_roles( $p{for_class}, qw(ElasticSearchX::Model::Role) );
     $class->$init_meta(%p);
 }
 
@@ -22,7 +22,7 @@ sub index {
     my ( $self, $name, @rest ) = @_;
     if ( ref $name ) {
         my $options = $name->meta->get_index( $rest[0] );
-        my $index = ElasticSearch::Model::Index->new( name => $rest[0], %$options, model => $name );
+        my $index = ElasticSearchX::Model::Index->new( name => $rest[0], %$options, model => $name );
         $options->{types} = $index->types;
         return $index;
     } else {
@@ -50,14 +50,14 @@ __END__
 
  package MyModel::Tweet;
  use Moose;
- use ElasticSearch::Document;
+ use ElasticSearchX::Model::Document;
 
  has message => ( isa => 'Str' );
  has date => ( isa => 'DateTime' );
 
  package MyModel;
  use Moose;
- use ElasticSearch::Model;
+ use ElasticSearchX::Model;
 
  __PACKAGE__->meta->make_immutable;
 
@@ -82,7 +82,7 @@ sensible defaults.
 The powerful search API makes the tedious task of building 
 ElasticSearch queries a lot easier.
 
-B<< The L<ElasticSearch::Model::Tutorial> is probably the best place
+B<< The L<ElasticSearchX::Model::Tutorial> is probably the best place
 to start! >>
 
 =head1 DSL
@@ -94,7 +94,7 @@ to start! >>
 Adds an index to the model. By default there is a C<default>
 index, which will be removed once you add custom indices.
 
-See L<ElasticSearch::Model::Index/ATTRIBUTES> for available options.
+See L<ElasticSearchX::Model::Index/ATTRIBUTES> for available options.
 
 =head2 analyzer
 
@@ -105,7 +105,7 @@ See L<ElasticSearch::Model::Index/ATTRIBUTES> for available options.
  analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
 
 Adds analyzers, tokenizers or filters to all indices. They can
-then be used in attributes of L<ElasticSearch::Document> classes.
+then be used in attributes of L<ElasticSearchX::Model::Document> classes.
 
 =head1 CONSTRUCTOR
 
@@ -113,7 +113,7 @@ then be used in attributes of L<ElasticSearch::Document> classes.
 
 =head2 index
 
-Returns a L<ElasticSearch::Model::Index> object.
+Returns a L<ElasticSearchX::Model::Index> object.
 
 =head2 deploy
 

@@ -1,6 +1,6 @@
 package Foo;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 has some => ( );
 has name => ( id => 1 );

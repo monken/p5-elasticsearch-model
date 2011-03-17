@@ -25,7 +25,6 @@ before _process_options => sub {
     $options->{traits} ||= [];
     push(@{$options->{traits}}, 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute')
         if($options->{property} || !exists $options->{property});
-    
 };
 
 after _process_options => sub {

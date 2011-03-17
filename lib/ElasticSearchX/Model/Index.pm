@@ -8,6 +8,8 @@ has path => ( is => 'ro' );
 
 has namespace => ( is => 'ro', lazy_build => 1 );
 
+has [qw(shards replicas)] => ( is => 'ro', default => 1 );
+
 has model => ( is => 'ro', required => 1, handles => [qw(es)] );
 
 has traits => ( isa => 'ArrayRef', is => 'ro', default => sub {[]} );
@@ -68,9 +70,13 @@ sub deployment_statement {
         my $method = "get_${_}_list";
         foreach my $name ( $model->$method ) {
             my $get = "get_$_";
-            $deploy->{analysis}->{$_}->{$name} = $model->$get($name);
+            $deploy->{settings}->{analysis}->{$_}->{$name} = $model->$get($name);
         }
     }
+    $deploy->{settings}->{index} = {
+        number_of_shards => $self->shards,
+        number_of_replicas => $self->replicas,
+    };
 
     return $deploy;
 }

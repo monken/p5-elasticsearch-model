@@ -11,7 +11,7 @@ sub _lazy_attributes {}
 after _inflated_attributes => sub { warn "someone called" };
 
 has index => ( isa      => 'ElasticSearchX::Model::Index',
-               is       => 'ro' );
+               is       => 'rw' );
 
 sub put {
     my ( $self, $qs ) = @_;

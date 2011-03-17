@@ -107,6 +107,11 @@ $MAPPING{'ElasticSearchX::Model::Document::Types::Location'} = sub {
     return ( %mapping, type => 'geo_point' );
 };
 
+$MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
+    my ($attr, $constraint) = @_;
+    return ( %{$constraint->type_parameter->class->meta->mapping});
+};
+
 $MAPPING{'DateTime'} = sub {
     my ( $attr, $tc ) = @_;
     return ( maptc( $attr, $tc->parent ), type => 'date' );

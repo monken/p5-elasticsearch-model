@@ -1,3 +1,9 @@
+package MyType;
+use Moose;
+use ElasticSearchX::Model::Document;
+
+has name => ( index => 'analyzed' );
+
 package MyClass;
 use Moose;
 use ElasticSearchX::Model::Document;
@@ -11,21 +17,51 @@ subtype Resources,
             homepage => Optional [Str],
             bugtracker => Optional [ Dict [ web => Str, mailto => Str ] ] ];
 
-has default  => ();
-has date     => ( isa => 'DateTime' );
-has loc      => ( isa => Location );
-has res      => ( isa => Resources );
-has abstract => ( analyzer => 'lowercase', term_vector => 'with_positions_offsets' );
+has default => ();
+has date    => ( isa => 'DateTime' );
+has loc     => ( isa => Location );
+has res     => ( isa => Resources );
+has abstract =>
+  ( analyzer => 'lowercase', term_vector => 'with_positions_offsets' );
+has module => ( isa => Type ['MyType'] );
+has modules => ( isa => ArrayRef[Type ['MyType']] );
 
 package main;
 use Test::More;
 use strict;
 use warnings;
 
+my $meta = MyClass->meta;
+
+is_deeply( [ sort map { $_->name } $meta->get_all_properties ],
+           [qw(abstract date default loc module modules res)] );
+
+my $module = $meta->get_attribute('module')->build_property;
+my $modules = $meta->get_attribute('module')->build_property;
+is_deeply( $module, { _source    => { compress => \1 },
+                          properties => {
+                                          name => {
+                                                   fields => {
+                                                       name => {
+                                                            analyzer => "standard",
+                                                            index    => "analyzed",
+                                                            store    => "yes",
+                                                            type     => "string"
+                                                       },
+                                                       raw => {
+                                                           index => "not_analyzed",
+                                                           store => "yes",
+                                                           type  => "string"
+                                                       }
+                                                   },
+                                                   type => "multi_field"
+                                          } } });
+
+is_deeply($module, $modules);
+
 is_deeply(
     MyClass->meta->mapping,
-    {  
-       _source    => { compress => \1 },
+    {  _source    => { compress => \1 },
        properties => {
            date => { 'store' => 'yes',
                      'type'  => 'date'
@@ -34,16 +70,18 @@ is_deeply(
                         'store' => 'yes',
                         'type'  => 'string'
            },
-           loc      => { 'type' => 'geo_point' },
+           loc    => { 'type' => 'geo_point' },
+           module => $module,
+           modules => $module,
            abstract => {
                'type' => 'multi_field',
                fields => {
                    abstract => {
 
-                       'index'  => 'analyzed',
-                       analyzer => 'lowercase',
-                       'store'  => 'yes',
-                       'type'   => 'string',
+                       'index'     => 'analyzed',
+                       analyzer    => 'lowercase',
+                       'store'     => 'yes',
+                       'type'      => 'string',
                        term_vector => 'with_positions_offsets',
                    },
                    raw => { 'index' => 'not_analyzed',

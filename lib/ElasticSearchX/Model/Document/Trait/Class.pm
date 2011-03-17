@@ -60,9 +60,7 @@ sub get_data {
     my ( $self, $instance ) = @_;
     return {
         map {
-                $_->name => $_->has_deflator
-              ? $_->deflate($instance)
-              : $_->get_value($instance)
+                $_->name => $_->deflate($instance)
           } grep {
             $_->has_value($instance) || $_->is_required
           } $self->get_all_properties };

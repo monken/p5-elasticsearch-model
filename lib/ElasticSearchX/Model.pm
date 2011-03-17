@@ -1,32 +1,29 @@
 package ElasticSearchX::Model;
+
 # ABSTRACT: Extensible and flexible model for ElasticSearch based on Moose
 use Moose           ();
 use Moose::Exporter ();
 use ElasticSearchX::Model::Index;
 
-my (undef, undef, $init_meta) =
-  Moose::Exporter->build_import_methods(
-         with_meta       => [qw(index analyzer tokenizer filter)],
-         install         => [qw(import unimport)],
-         class_metaroles => { class => ['ElasticSearchX::Model::Trait::Class'] },
-  );
-
-sub init_meta {
-    my $class = shift;
-    my %p = @_;
-    Moose::Util::ensure_all_roles( $p{for_class}, qw(ElasticSearchX::Model::Role) );
-    $class->$init_meta(%p);
-}
+Moose::Exporter->setup_import_methods(
+        with_meta       => [qw(index analyzer tokenizer filter)],
+        class_metaroles => { class => ['ElasticSearchX::Model::Trait::Class'] },
+        base_class_roles => [qw(ElasticSearchX::Model::Role)], );
 
 sub index {
     my ( $self, $name, @rest ) = @_;
-    if ( ref $name ) {
+    if ( !ref $name ) {
+        return $self->add_index( $name, {@rest} );
+    } elsif ( ref $name eq 'ARRAY' ) {
+        $self->add_index( $_, {@rest} ) for (@$name);
+        return;
+    } else {
         my $options = $name->meta->get_index( $rest[0] );
-        my $index = ElasticSearchX::Model::Index->new( name => $rest[0], %$options, model => $name );
+        my $index =
+          ElasticSearchX::Model::Index->new( name => $rest[0],
+                                             %$options, model => $name );
         $options->{types} = $index->types;
         return $index;
-    } else {
-        return $self->add_index( $name, {@rest} );
     }
 }
 

@@ -1,4 +1,4 @@
-package ElasticSearch::Model::Index;
+package ElasticSearchX::Model::Index;
 use Moose;
 use Module::Find ();
 
@@ -7,6 +7,8 @@ has name => ( is => 'ro' );
 has path => ( is => 'ro' );
 
 has namespace => ( is => 'ro', lazy_build => 1 );
+
+has [qw(shards replicas)] => ( is => 'ro', default => 1 );
 
 has model => ( is => 'ro', required => 1, handles => [qw(es)] );
 
@@ -53,7 +55,7 @@ sub type {
     Class::MOP::load_class($class);
     return $class->new(
         index => $self,
-        type_class => $self->get_type($type),
+        type => $self->get_type($type),
     );
 }
 
@@ -68,9 +70,13 @@ sub deployment_statement {
         my $method = "get_${_}_list";
         foreach my $name ( $model->$method ) {
             my $get = "get_$_";
-            $deploy->{analysis}->{$_}->{$name} = $model->$get($name);
+            $deploy->{settings}->{analysis}->{$_}->{$name} = $model->$get($name);
         }
     }
+    $deploy->{settings}->{index} = {
+        number_of_shards => $self->shards,
+        number_of_replicas => $self->replicas,
+    };
 
     return $deploy;
 }
@@ -94,7 +100,7 @@ name of the model.
 
 =head2 types
 
-An arrayref of L<ElasticSearch::Document> meta objects.
+An arrayref of L<ElasticSearchX::Model::Document> meta objects.
 
 =head2 traits
 

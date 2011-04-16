@@ -1,10 +1,10 @@
 package MyModel::Twitter::User;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 package MyModel::Twitter::Tweet;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 package MyModel::IRC::User;
 use Moose;
@@ -15,7 +15,7 @@ use Moose::Role;
 
 package MyModel;
 use Moose;
-use ElasticSearch::Model;
+use ElasticSearchX::Model;
 
 analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
 analyzer fulltext  => ( type      => 'snowball', language => 'English' );
@@ -32,7 +32,7 @@ use warnings;
 
 ok( my $model = MyModel->new(), 'Created object ok' );
 my $meta = $model->meta;
-ok( $model->does('ElasticSearch::Model::Role'), 'Does role' );
+ok( $model->does('ElasticSearchX::Model::Role'), 'Does role' );
 
 is_deeply( [ $meta->get_index_list ],
            [ 'irc', 'twitter' ],
@@ -48,7 +48,7 @@ is_deeply( $idx->types,
 
 ok( $idx = $idx->model->index('irc'), 'Switch index' );
 
-isa_ok( $idx, 'ElasticSearch::Model::Index' );
+isa_ok( $idx, 'ElasticSearchX::Model::Index' );
 
 is_deeply( $idx->types,
            { user => MyModel::IRC::User->meta },
@@ -58,7 +58,7 @@ ok($idx->does('MyIndexTrait'), 'Trait has been applied' );
 
 isa_ok( $idx->model->es, 'ElasticSearch' );
 
-isa_ok($idx->type('user'), 'ElasticSearch::Document::Set');
+isa_ok($idx->type('user'), 'ElasticSearchX::Model::Document::Set');
 
 is_deeply($idx->type('user')->index, $idx, 'MyModel::IRC::User');
 

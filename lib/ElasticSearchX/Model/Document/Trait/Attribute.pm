@@ -1,6 +1,6 @@
-package ElasticSearch::Document::Trait::Attribute;
+package ElasticSearchX::Model::Document::Trait::Attribute;
 use Moose::Role;
-use ElasticSearch::Document::Mapping;
+use ElasticSearchX::Model::Document::Mapping;
 with 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute';
 
 has id => ( is => 'ro', isa => 'Bool|ArrayRef', default => 0 );
@@ -11,10 +11,11 @@ has type   => ( is => 'ro', isa        => 'Str', default => 'string' );
 has parent => ( is => 'ro', isa        => 'Bool', default => 0 );
 has dynamic => ( is => 'ro', isa        => 'Bool', default => 1 );
 has analyzer => ( is => 'ro', isa => 'Str' );
+has term_vector => ( is => 'ro', isa => 'Str' );
 
 sub build_property {
     my $self = shift;
-    return { ElasticSearch::Document::Mapping::maptc($self, $self->type_constraint) };
+    return { ElasticSearchX::Model::Document::Mapping::maptc($self, $self->type_constraint) };
 }
 
 before _process_options => sub {
@@ -24,7 +25,6 @@ before _process_options => sub {
     $options->{traits} ||= [];
     push(@{$options->{traits}}, 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute')
         if($options->{property} || !exists $options->{property});
-    
 };
 
 after _process_options => sub {
@@ -70,7 +70,7 @@ a document.
 
 =head2 type
 
-Most of the time L<ElasticSearch::Document::Mapping> will take 
+Most of the time L<ElasticSearchX::Model::Document::Mapping> will take 
 care of this option and set the correct value based on the
 type constriant. In case it doesn't know what to do, this 
 value will be used as the type for the attribute. Defaults

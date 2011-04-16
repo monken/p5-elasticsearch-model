@@ -1,5 +1,5 @@
-package ElasticSearch::Model::Tutorial;
-# ABSTRACT: Tutorial for ElasticSearch::Model
+package ElasticSearchX::Model::Tutorial;
+# ABSTRACT: Tutorial for ElasticSearchX::Model
 1;
 
 __END__
@@ -9,7 +9,7 @@ __END__
 In this tutorial we are going to walk through the ElasticSearch example
 on L<http://www.elasticsearch.org/>. Go ahead and read it first,
 this gives you a good insight into how ElasticSearch works and how
-L<ElasticSearch::Model> can help to make it even more elastic.
+L<ElasticSearchX::Model> can help to make it even more elastic.
 
 =head1 DOCUMENTS
 
@@ -17,15 +17,15 @@ ElasticSearch is a document-based storage system. Even though it states
 that it is schema free, it is not recommended to use ElasticSearch
 without defining a proper schema or type, as ElasticSearch calls it.
 
-L<ElasticSearch::Document> takes care of that. The ElasticSearch example
+L<ElasticSearchX::Model::Document> takes care of that. The ElasticSearch example
 consists of two types: C<tweet> and C<user>. The C<tweet> type
 contains the properties C<user>, C<post_date> and C<message>. The C<user>
-type contains only the C<name> property. Using L<ElasticSearch::Document>
+type contains only the C<name> property. Using L<ElasticSearchX::Model::Document>
 this looks like:
 
  package MyModel::Tweet;
  use Moose;
- use ElasticSearch::Document;
+ use ElasticSearchX::Model::Document;
  
  has id => ( id => [qw(user post_date)] );
  has user => ( isa => 'Str' );
@@ -34,12 +34,12 @@ this looks like:
  
  package MyModel::User;
  use Moose;
- use ElasticSearch::Document;
+ use ElasticSearchX::Model::Document;
  
  has nickname => ( isa => 'Str', id => 1 );
  has name => ( isa => 'Str' );
  
-By default, all attributes defined in L<ElasticSearch::Document> classes
+By default, all attributes defined in L<ElasticSearchX::Model::Document> classes
 are required and a read-only accessor is set up. This is different from
 the default Moose behaviour, but saves a lot of typing.
 
@@ -63,7 +63,7 @@ no id attribute.
 Each document belongs to a type. Think of it as a table in a relational
 database. And each type belongs to an index, which corresponds to a database.
 
-Modeling indices and types with L<ElasticSearch::Model> is pretty easy
+Modeling indices and types with L<ElasticSearchX::Model> is pretty easy
 and the types have actually already been built: the meta objects of the
 document classes describe the types. They include all the necessary 
 information to build a type mapping.
@@ -72,7 +72,7 @@ Indices are defined in a model class:
 
  package MyModel;
  use Moose;
- use ElasticSearch::Model;
+ use ElasticSearchX::Model;
  
  index twitter => ( namespace => 'MyModel' );
 
@@ -84,7 +84,7 @@ mode class. You can also load types explicitly bydefining a C<types> option:
 
  index twitter => ( types => [MyModel::Tweet->meta, MyModel::User->meta] );
 
-Make sure that the classes are loaded. See L<ElasticSearch::Model::Index> for all
+Make sure that the classes are loaded. See L<ElasticSearchX::Model::Index> for all
 the available options.
 
 To deploy the indices and mappings to ElasticSearch, simply call
@@ -93,7 +93,7 @@ To deploy the indices and mappings to ElasticSearch, simply call
  $model->deploy;
 
 This will try to connect to an ElasticSearch instance on 127.0.0.1:9200.
-See L<ElasticSearch::Model/CONSTRUCTOR> for more information.
+See L<ElasticSearchX::Model/CONSTRUCTOR> for more information.
 
 =head1 INDEXING
 
@@ -115,16 +115,16 @@ The first parameter contains the property/values pairs. The C<post_date>
 property is special because it is a L<DateTime> object. Obects are
 being deflated prior to insertion. This is handled by 
 L<MooseX::Attribute::Deflator> and is configured in 
-L<ElasticSearch::Document::Types>. You can easily add deflators
+L<ElasticSearchX::Model::Document::Types>. You can easily add deflators
 for other objects.
 
-The second parameter to L<ElasticSearch::Document::Set/put> tells
+The second parameter to L<ElasticSearchX::Model::Document::Set/put> tells
 ElasticSearch to refresh the index immediately. Otherwise it can
 take up to one second for the server to refresh and the subsequent
-call to L<ElasticSearch::Document::Set/count> will return C<0>.
+call to L<ElasticSearchX::Model::Document::Set/count> will return C<0>.
 
 If you index large numbers of documents, it is advised to call
-L<ElasticSearch::Model::Index/refresh> once you are finished and not
+L<ElasticSearchX::Model::Index/refresh> once you are finished and not
 on every put.
 
 =head1 RETRIEVING
@@ -144,7 +144,7 @@ again. Thus, C<< $tweet_copy->post_date >> is a DateTime object
 again.
 
 If you don't really care about objects or need extra speed, you can set
-L<ElasticSearch::Documents::Set/inflate> to C<0>. This will return 
+L<ElasticSearchX::Model::Documents::Set/inflate> to C<0>. This will return 
 the raw response from ElasticSearch.
 
  $twitter->type('tweet')->inflate(0)->get($tweet->id);

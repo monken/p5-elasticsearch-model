@@ -1,19 +1,21 @@
-package ElasticSearch::Document::Types;
+package ElasticSearchX::Model::Document::Types;
 use List::MoreUtils ();
 use DateTime::Format::Epoch::Unix;
 use DateTime::Format::ISO8601;
 use ElasticSearch;
 use MooseX::Attribute::Deflator;
+use DateTime;
 
 use MooseX::Types -declare => [
     qw(
       Location
-      ESDateTime
       QueryType
       ES
+      Type
       ) ];
 
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef/;
+use MooseX::Types::Structured qw(Dict Tuple Optional);
 
 class_type ES, { class => 'ElasticSearch' };
 coerce ES, from Str, via {
@@ -40,15 +42,29 @@ coerce ES, from ArrayRef, via {
 
 enum QueryType, qw(query_and_fetch query_then_fetch dfs_query_and_fetch dfs_query_then_fetch);
 
-class_type ESDateTime, { class => 'DateTime' };
-
-coerce ESDateTime, from Str, via {
+class_type 'DateTime';
+coerce 'DateTime', from Str, via {
     if ( $_ =~ /^\d+$/ ) {
         DateTime::Format::Epoch::Unix->parse_datetime($_);
     } else {
         DateTime::Format::ISO8601->parse_datetime($_);
     }
 };
+
+my $REGISTRY = Moose::Util::TypeConstraints->get_type_constraint_registry;
+
+$REGISTRY->add_type_constraint(
+    Moose::Meta::TypeConstraint::Parameterizable->new(
+        name               => Type,
+        package_defined_in => __PACKAGE__,
+        parent             => find_type_constraint('Object'),
+        constraint         => sub { $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') },
+        #constraint_generator => sub { sub { $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') } },
+        constraint_generator => sub { sub { 1 }}   
+    )
+);
+
+Moose::Util::TypeConstraints::add_parameterizable_type($REGISTRY->get_type_constraint(Type));
 
 
 subtype Location,
@@ -67,10 +83,20 @@ my @stat =
 deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } };
 deflate 'ScalarRef', via { $$_ };
 deflate 'DateTime', via { $_->iso8601 };
-deflate ESDateTime, via { $_->iso8601 };
 inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
-inflate ESDateTime, via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
+inflate 'Any', via { $_ };
 deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] };
+deflate Type . '[]', via { $_->meta->get_data($_); };
+deflate 'ArrayRef[]', via {
+    my ($attr, $constraint, $deflate) = @_;
+    $constraint = $constraint->parent
+        if(ref $constraint eq 'MooseX::Types::TypeDecorator');
+    my $value = [@$_];
+    $_ = $deflate->($_, $constraint->type_parameter) for(@$value);
+    return $deflate->($value, $constraint->parent);
+};
 no MooseX::Attribute::Deflator;
+
+
 
 1;

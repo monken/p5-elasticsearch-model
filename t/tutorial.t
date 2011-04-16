@@ -1,6 +1,6 @@
 package MyModel::Tweet;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 has id        => ( id  => [qw(user post_date)] );
 has user      => ( isa => 'Str' );
@@ -9,14 +9,14 @@ has message   => ( isa => 'Str' );
 
 package MyModel::User;
 use Moose;
-use ElasticSearch::Document;
+use ElasticSearchX::Model::Document;
 
 has nickname => ( isa => 'Str', id => 1 );
 has name => ( isa => 'Str' );
 
 package MyModel;
 use Moose;
-use ElasticSearch::Model;
+use ElasticSearchX::Model;
 
 index twitter => ( namespace => 'MyModel' );
 

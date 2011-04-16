@@ -1,4 +1,4 @@
-package ElasticSearch::Document::Mapping;
+package ElasticSearchX::Model::Document::Mapping;
 use strict;
 use warnings;
 use Moose::Util::TypeConstraints;
@@ -30,6 +30,7 @@ $MAPPING{Any} = sub {
 
 $MAPPING{Str} = sub {
     my ( $attr, $tc ) = @_;
+    my %term = $attr->term_vector ? ( term_vector => $attr->term_vector ) : ();
     if($attr->index && $attr->index eq 'analyzed' || $attr->analyzer) {
         return (
             type   => 'multi_field',
@@ -38,6 +39,7 @@ $MAPPING{Str} = sub {
                                                index => 'analyzed',
                                                $attr->boost ? ( boost => $attr->boost ) : (),
                                                type  => $attr->type,
+                                               %term,
                                                analyzer => $attr->analyzer || 'standard',
                               },
                               raw => { store => $attr->store,
@@ -46,7 +48,7 @@ $MAPPING{Str} = sub {
                                        type  => $attr->type
                               },});
     }
-    return ( index => 'not_analyzed', maptc($attr, $tc->parent) );
+    return ( index => 'not_analyzed', %term, maptc($attr, $tc->parent) );
 };
 
 $MAPPING{Num} = sub {
@@ -98,11 +100,16 @@ $MAPPING{'MooseX::Types::Structured::Optional[]'} = sub {
     return maptc($attr, $constraint->type_parameter);
 };
 
-$MAPPING{'ElasticSearch::Document::Types::Location'} = sub {
+$MAPPING{'ElasticSearchX::Model::Document::Types::Location'} = sub {
     my ( $attr, $tc ) = @_;
     my %mapping = maptc($attr, $tc->parent);
     delete $mapping{$_} for(qw(index store));
     return ( %mapping, type => 'geo_point' );
+};
+
+$MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
+    my ($attr, $constraint) = @_;
+    return ( %{$constraint->type_parameter->class->meta->mapping});
 };
 
 $MAPPING{'DateTime'} = sub {

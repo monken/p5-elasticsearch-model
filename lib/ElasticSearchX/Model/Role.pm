@@ -1,7 +1,8 @@
-package ElasticSearch::Model::Role;
+package ElasticSearchX::Model::Role;
 use Moose::Role;
 use ElasticSearch;
-use ElasticSearch::Model::Index;
+use ElasticSearchX::Model::Index;
+use Try::Tiny;
 
 has es => ( is => 'rw', lazy_build => 1 );
 
@@ -16,7 +17,7 @@ sub deploy {
     my $t = $self->es->transport;
     foreach my $name ( $self->meta->get_index_list ) {
         my $index = $self->index($name);
-        eval { $t->request( { method => 'DELETE', cmd => "/$name", } ); };
+        try { $t->request( { method => 'DELETE', cmd => "/$name", } ); };
         my $dep     = $index->deployment_statement;
         my $mapping = delete $dep->{mappings};
         $t->request(

@@ -1,9 +1,10 @@
 package ElasticSearchX::Model::Document::Bulk;
-use strict;
-use warnings;
+use Moose;
+use MooseX::ClassAttributes;
 use Exporter qw(import);
-
 our @EXPORT = qw(bulk);
+
+has stash => ( traits => ['Array'], handles => {  } );
 
 $ElasticSearchX::Model::Document::Bulk::BULK = 0;
 sub bulk (&) {
@@ -15,8 +16,6 @@ sub bulk (&) {
 sub is_bulk {
     $ElasticSearchX::Model::Document::Bulk::BULK
 }
-
-sub stash {}
 
 sub commit {}
 

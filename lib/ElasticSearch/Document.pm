@@ -13,8 +13,6 @@ my ( undef, undef, $init_meta ) = Moose::Exporter->build_import_methods(
     install         => [qw(import unimport)],
     with_meta       => [qw(has)],
     class_metaroles => {
-        constructor =>
-          ['MooseX::Attribute::LazyInflator::Meta::Role::Method::Constructor'],
         class     => ['ElasticSearch::Document::Trait::Class']
     }, );
 

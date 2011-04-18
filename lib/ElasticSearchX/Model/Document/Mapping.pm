@@ -109,7 +109,7 @@ $MAPPING{'ElasticSearchX::Model::Document::Types::Location'} = sub {
 
 $MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
     my ($attr, $constraint) = @_;
-    return ( %{$constraint->type_parameter->class->meta->mapping});
+    return ( %{$constraint->type_parameter->class->meta->mapping} );
 };
 
 $MAPPING{'DateTime'} = sub {

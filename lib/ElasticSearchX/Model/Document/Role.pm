@@ -5,6 +5,7 @@ use JSON::XS;
 use Digest::SHA1;
 use List::MoreUtils ();
 use Carp;
+
 has _inflated_attributes => ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub {{}} );
 
 has index => ( isa      => 'ElasticSearchX::Model::Index',

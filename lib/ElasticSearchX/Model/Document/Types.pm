@@ -58,9 +58,7 @@ $REGISTRY->add_type_constraint(
         name               => Type,
         package_defined_in => __PACKAGE__,
         parent             => find_type_constraint('Object'),
-        constraint         => sub { $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') },
-        #constraint_generator => sub { sub { $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') } },
-        constraint_generator => sub { sub { 1 }}   
+        constraint_generator => sub { sub { $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') } },
     )
 );
 
@@ -86,7 +84,7 @@ deflate 'DateTime', via { $_->iso8601 };
 inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
 inflate 'Any', via { $_ };
 deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] };
-deflate Type . '[]', via { $_->meta->get_data($_); };
+deflate Type . '[]', via { ref $_ eq 'HASH' ? $_ : $_->meta->get_data($_) };
 deflate 'ArrayRef[]', via {
     my ($attr, $constraint, $deflate) = @_;
     $constraint = $constraint->parent

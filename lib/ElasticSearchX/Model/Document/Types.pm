@@ -5,6 +5,7 @@ use DateTime::Format::ISO8601;
 use ElasticSearch;
 use MooseX::Attribute::Deflator;
 use DateTime;
+use Scalar::Util qw(blessed);
 
 use MooseX::Types -declare => [
     qw(
@@ -58,7 +59,7 @@ $REGISTRY->add_type_constraint(
         name               => Type,
         package_defined_in => __PACKAGE__,
         parent             => find_type_constraint('Object'),
-        constraint_generator => sub { sub { $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') } },
+        constraint_generator => sub { sub { blessed $_ && $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') } },
     )
 );
 

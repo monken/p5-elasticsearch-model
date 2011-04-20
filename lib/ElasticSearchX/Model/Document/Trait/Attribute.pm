@@ -1,6 +1,7 @@
 package ElasticSearchX::Model::Document::Trait::Attribute;
 use Moose::Role;
 use ElasticSearchX::Model::Document::Mapping;
+with 'MooseX::Attribute::Deflator::Meta::Role::Attribute';
 with 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute';
 
 has id => ( is => 'ro', isa => 'Bool|ArrayRef', default => 0 );
@@ -40,6 +41,9 @@ after _process_options => sub {
         };
     }
 };
+
+
+
 
 1;
 

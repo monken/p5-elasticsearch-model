@@ -17,21 +17,24 @@ sub deploy {
     my $t = $self->es->transport;
     foreach my $name ( $self->meta->get_index_list ) {
         my $index = $self->index($name);
-        try { $t->request( { method => 'DELETE', cmd => "/$name", } ); };
+        try { $t->request( { method => 'DELETE', cmd => "/$name", } ); }
+            if($params{delete});
         my $dep     = $index->deployment_statement;
         my $mapping = delete $dep->{mappings};
-        $t->request(
+        try {
+            $t->request(
                      { method => 'PUT',
                        cmd    => "/$name",
                        data   => $dep,
                      } );
+        };
         while(my($k,$v) = each %$mapping) {
-        $t->request(
-                     { method => 'PUT',
-                       cmd    => "/$name/$k/_mapping",
-                       data   => { $k => $v },
-                     } );
-                 }
+              $t->request(
+                           { method => 'PUT',
+                             cmd    => "/$name/$k/_mapping",
+                             data   => { $k => $v },
+                           } );
+                       }
     }
     return 1;
 }

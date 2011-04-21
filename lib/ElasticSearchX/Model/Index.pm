@@ -14,6 +14,8 @@ has model => ( is => 'ro', required => 1, handles => [qw(es)] );
 
 has traits => ( isa => 'ArrayRef', is => 'ro', default => sub {[]} );
 
+has refresh_interval => ( is => 'ro', default => '1s' );
+
 has types => ( isa        => 'HashRef',
                traits     => ['Hash'],
                is         => 'ro',
@@ -76,6 +78,7 @@ sub deployment_statement {
     $deploy->{settings}->{index} = {
         number_of_shards => $self->shards,
         number_of_replicas => $self->replicas,
+        refresh_interval => $self->refresh_interval,
     };
 
     return $deploy;

@@ -16,6 +16,8 @@ has traits => ( isa => 'ArrayRef', is => 'ro', default => sub {[]} );
 
 has refresh_interval => ( is => 'ro', default => '1s' );
 
+has dynamic => ( is => 'ro', isa => 'Bool', default => 0 );
+
 has types => ( isa        => 'HashRef',
                traits     => ['Hash'],
                is         => 'ro',
@@ -78,8 +80,11 @@ sub deployment_statement {
     $deploy->{settings}->{index} = {
         number_of_shards => $self->shards,
         number_of_replicas => $self->replicas,
-        refresh_interval => $self->refresh_interval,
+        refresh_interval => $self->refresh_interval
     };
+    
+    $deploy->{settings}->{index}->{mapper}->{dynamic} = \0
+        unless($self->dynamic);
 
     return $deploy;
 }

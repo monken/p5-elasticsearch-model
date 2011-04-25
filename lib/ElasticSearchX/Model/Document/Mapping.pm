@@ -25,31 +25,44 @@ $MAPPING{Any} = sub {
              $attr->type eq 'object' ? ( dynamic => $attr->dynamic ) : (),
              $attr->boost ? ( boost => $attr->boost ) : (),
              type  => 'string',
-             $attr->analyzer ? ( analyzer => $attr->analyzer ) : (), );
+             $attr->analyzer->[0] ? ( analyzer => $attr->analyzer->[0] ) : (), );
 };
 
 $MAPPING{Str} = sub {
     my ( $attr, $tc ) = @_;
     my %term = $attr->term_vector ? ( term_vector => $attr->term_vector ) : ();
-    if($attr->index && $attr->index eq 'analyzed' || $attr->analyzer) {
+    if ( $attr->index && $attr->index eq 'analyzed' || @{ $attr->analyzer } ) {
+        my @analyzer = @{ $attr->{analyzer} };
+        push(@analyzer, 'standard') unless(@analyzer);
         return (
             type   => 'multi_field',
-                       fields => {
-                           $attr->name => { store => $attr->store,
-                                               index => 'analyzed',
-                                               $attr->boost ? ( boost => $attr->boost ) : (),
-                                               type  => $attr->type,
-                                               %term,
-                                               analyzer => $attr->analyzer || 'standard',
-                              },
-                              raw => { store => $attr->store,
-                                       index => 'not_analyzed',
-                                       $attr->boost ? ( boost => $attr->boost ) : (),
-                                       type  => $attr->type
-                              },});
+            fields => {
+                $attr->name => { store => $attr->store,
+                                 index => 'not_analyzed',
+                                 $attr->boost ? ( boost => $attr->boost ) : (),
+                                 type => $attr->type,
+                                 %term,
+                },
+                analyzed => { store => $attr->store,
+                           index => 'analyzed',
+                           $attr->boost ? ( boost => $attr->boost ) : (),
+                           type => $attr->type,
+                           %term,
+                           analyzer => shift @analyzer },
+                (
+                   map {
+                       $_ => { store => $attr->store,
+                               index => 'analyzed',
+                               $attr->boost ? ( boost => $attr->boost ) : (),
+                               type => $attr->type,
+                               %term,
+                               analyzer => $_ }
+                     } @analyzer
+                ) } );
     }
-    return ( index => 'not_analyzed', %term, maptc($attr, $tc->parent) );
+    return ( index => 'not_analyzed', %term, maptc( $attr, $tc->parent ) );
 };
+
 
 $MAPPING{Num} = sub {
     my ( $attr, $tc ) = @_;
@@ -92,7 +105,7 @@ $MAPPING{'MooseX::Types::Structured::Dict[]'} = sub {
     }
     my %mapping = maptc($attr, $constraint->parent);
     delete $mapping{$_} for(qw(index boost store));
-    return ( %mapping, type => 'object', properties => $value );
+    return ( %mapping, type => 'object', dynamic => \0, properties => $value );
 };
 
 $MAPPING{'MooseX::Types::Structured::Optional[]'} = sub {

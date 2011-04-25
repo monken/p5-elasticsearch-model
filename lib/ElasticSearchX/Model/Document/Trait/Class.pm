@@ -16,6 +16,7 @@ sub mapping {
     my $props = { map { $_->name => $_->build_property }
                   sort { $a->name cmp $b->name } $self->get_all_properties };
     return { _source    => { compress => \1 },
+             dynamic    => \0,
              properties => $props, };
 }
 

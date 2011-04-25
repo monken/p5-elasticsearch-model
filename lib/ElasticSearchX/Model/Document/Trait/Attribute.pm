@@ -4,6 +4,9 @@ use ElasticSearchX::Model::Document::Mapping;
 
 with 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute';
 
+use ElasticSearchX::Model::Document::Types;
+use MooseX::Types::Moose qw(ArrayRef);
+
 has id => ( is => 'ro', isa => 'Bool|ArrayRef', default => 0 );
 has index  => ( is => 'ro' );
 has boost  => ( is => 'ro', isa        => 'Num' );
@@ -11,7 +14,7 @@ has store  => ( is => 'ro', isa        => 'Str', default => 'yes' );
 has type   => ( is => 'ro', isa        => 'Str', default => 'string' );
 has parent => ( is => 'ro', isa        => 'Bool', default => 0 );
 has dynamic => ( is => 'ro', isa        => 'Bool', default => 1 );
-has analyzer => ( is => 'ro', isa => 'Str' );
+has analyzer => ( is => 'ro', isa => ArrayRef, coerce => 1, default => sub { [] } );
 has term_vector => ( is => 'ro', isa => 'Str' );
 
 sub build_property {

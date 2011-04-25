@@ -18,6 +18,8 @@ use MooseX::Types -declare => [
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef/;
 use MooseX::Types::Structured qw(Dict Tuple Optional);
 
+coerce ArrayRef, from Str, via { [$_] };
+
 class_type ES, { class => 'ElasticSearch' };
 coerce ES, from Str, via {
     my $server = $_;
@@ -76,14 +78,13 @@ coerce Location, from HashRef,
 coerce Location, from Str, via { [ reverse split(/,/) ] };
 
 use MooseX::Attribute::Deflator;
-deflate 'Bool', via { \$_ };
+deflate 'Bool', via { \($_ ? 1 : 0) };
 my @stat =
   qw(dev ino mode nlink uid gid rdev size atime mtime ctime blksize blocks);
 deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } };
-deflate 'ScalarRef', via { $$_ };
+deflate 'ScalarRef', via { ref $_ ? $$_ : $_ };
 deflate 'DateTime', via { $_->iso8601 };
 inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
-inflate 'Any', via { $_ };
 deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] };
 deflate Type . '[]', via { ref $_ eq 'HASH' ? $_ : $_->meta->get_data($_) };
 deflate 'ArrayRef[]', via {

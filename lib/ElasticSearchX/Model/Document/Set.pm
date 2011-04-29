@@ -40,7 +40,8 @@ has inflate =>
   ( isa => 'Bool', default => 1, is => 'rw', traits => [qw(Chained)] );
 
 sub _build_query {
-    { query => { match_all => {} } };
+    my $self = shift;
+    { query => { match_all => {} }, ( $self->filter ? ( filter => $self->filter ) : () ) };
 }
 
 sub as_query { }

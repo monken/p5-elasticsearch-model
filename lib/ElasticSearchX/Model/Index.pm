@@ -18,6 +18,8 @@ has refresh_interval => ( is => 'ro', default => '1s' );
 
 has dynamic => ( is => 'ro', isa => 'Bool', default => 0 );
 
+has alias_for => ( is => 'ro', isa => 'Str' );
+
 has types => ( isa        => 'HashRef',
                traits     => ['Hash'],
                is         => 'ro',

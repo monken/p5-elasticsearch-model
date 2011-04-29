@@ -79,6 +79,7 @@ coerce Location, from Str, via { [ reverse split(/,/) ] };
 
 use MooseX::Attribute::Deflator;
 deflate 'Bool', via { \($_ ? 1 : 0) };
+inflate 'Bool', via { $_ ? 1 : 0 };
 my @stat =
   qw(dev ino mode nlink uid gid rdev size atime mtime ctime blksize blocks);
 deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } };

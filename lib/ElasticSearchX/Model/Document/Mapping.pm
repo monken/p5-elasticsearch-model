@@ -37,12 +37,12 @@ $MAPPING{Str} = sub {
         return (
             type   => 'multi_field',
             fields => {
-                $attr->name => { store => $attr->store,
+                ($attr->not_analyzed ? ($attr->name => { store => $attr->store,
                                  index => 'not_analyzed',
                                  $attr->boost ? ( boost => $attr->boost ) : (),
                                  type => $attr->type,
                                  %term,
-                },
+                } ) : () ),
                 analyzed => { store => $attr->store,
                            index => 'analyzed',
                            $attr->boost ? ( boost => $attr->boost ) : (),

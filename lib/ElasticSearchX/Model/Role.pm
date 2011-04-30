@@ -29,7 +29,7 @@ sub deploy {
                        cmd    => "/$name",
                        data   => $dep,
                      } );
-        } catch { warn $_ };
+        };
         sleep(1);
         while(my($k,$v) = each %$mapping) {
               $t->request(

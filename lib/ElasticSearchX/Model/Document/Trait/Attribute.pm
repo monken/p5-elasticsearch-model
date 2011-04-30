@@ -15,6 +15,7 @@ has type   => ( is => 'ro', isa        => 'Str', default => 'string' );
 has parent => ( is => 'ro', isa        => 'Bool', default => 0 );
 has dynamic => ( is => 'ro', isa        => 'Bool', default => 1 );
 has analyzer => ( is => 'ro', isa => ArrayRef, coerce => 1, default => sub { [] } );
+has not_analyzed => ( is => 'ro', isa => 'Bool', default => 1 );
 has term_vector => ( is => 'ro', isa => 'Str' );
 
 sub build_property {

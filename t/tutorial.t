@@ -24,7 +24,7 @@ package main;
 use Test::Most;
 
 my $model = MyModel->new;
-ok( $model->deploy, 'Deploy ok' );
+ok( $model->deploy( delete => 1 ), 'Deploy ok' );
 
 use DateTime;
 

@@ -38,17 +38,18 @@ is_deeply( [ sort map { $_->name } $meta->get_all_properties ],
 
 my $module = $meta->get_attribute('module')->build_property;
 my $modules = $meta->get_attribute('module')->build_property;
-is_deeply( $module, { _source    => { compress => \1 },
+is_deeply( $module, {     _source    => { compress => \1 },
+                          dynamic => \0,
                           properties => {
                                           name => {
                                                    fields => {
-                                                       name => {
+                                                       analyzed => {
                                                             analyzer => "standard",
                                                             index    => "analyzed",
                                                             store    => "yes",
                                                             type     => "string"
                                                        },
-                                                       raw => {
+                                                       name => {
                                                            index => "not_analyzed",
                                                            store => "yes",
                                                            type  => "string"
@@ -62,6 +63,7 @@ is_deeply($module, $modules);
 is_deeply(
     MyClass->meta->mapping,
     {  _source    => { compress => \1 },
+       dynamic => \0,
        properties => {
            date => { 'store' => 'yes',
                      'type'  => 'date'
@@ -76,7 +78,7 @@ is_deeply(
            abstract => {
                'type' => 'multi_field',
                fields => {
-                   abstract => {
+                   analyzed => {
 
                        'index'     => 'analyzed',
                        analyzer    => 'lowercase',
@@ -84,12 +86,13 @@ is_deeply(
                        'type'      => 'string',
                        term_vector => 'with_positions_offsets',
                    },
-                   raw => { 'index' => 'not_analyzed',
+                   abstract => { 'index' => 'not_analyzed',
                             'store' => 'yes',
                             'type'  => 'string'
                    } }
            },
            res => {
+               dynamic    => \0,
                type       => "object",
                properties => {
                    license => { store => 'yes',
@@ -103,6 +106,7 @@ is_deeply(
                        index => 'not_analyzed'
                    },
                    bugtracker => { type       => 'object',
+                                   dynamic => \0,
                                    properties => {
                                                    web => {
                                                          store => 'yes',

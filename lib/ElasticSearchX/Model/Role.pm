@@ -49,9 +49,4 @@ sub deploy {
     return 1;
 }
 
-sub request {
-    my ( $self, $path, $body ) = @_;
-
-}
-
 1;

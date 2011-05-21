@@ -76,7 +76,7 @@ using these classes. Results from ElasticSearch inflate automatically
 to the corresponding Moose classes. Furthermore, it provides
 sensible defaults.
 
-The powerful search API makes the tedious task of building 
+The search API makes the tedious task of building 
 ElasticSearch queries a lot easier.
 
 B<< The L<ElasticSearchX::Model::Tutorial> is probably the best place
@@ -104,23 +104,44 @@ See L<ElasticSearchX::Model::Index/ATTRIBUTES> for available options.
 Adds analyzers, tokenizers or filters to all indices. They can
 then be used in attributes of L<ElasticSearchX::Model::Document> classes.
 
-=head1 CONSTRUCTOR
+=head1 ATTRIBUTES
+
+=head2 es
+
+Builds and holds the L<ElasticSearch> object. Valid values are:
+
+=over
+
+=item B<:9200>
+
+Connect to a server on C<127.0.0.1>, port C<9200> with the C<httptiny>
+transport class and a timeout of 30 seconds.
+
+=item B<[qw(:9200 12.12.12.12:9200)]>
+
+Connect to C<127.0.0.1:9200> and C<12.12.12.12:9200> with the same
+defaults as above.
+
+=item B<{ %args }>
+
+Passes C<%args> directly to the L<ElasticSearch> constructor.
+
+=back
 
 =head1 METHODS
 
 =head2 index
 
-Returns a L<ElasticSearchX::Model::Index> object.
+Returns an L<ElasticSearchX::Model::Index> object.
 
 =head2 deploy
 
 C<deploy> will remove all indices and then insert them one
 after the other. See L</upgrade> for an upgrade routine.
 
-B<< All data will be lost during C<deploy> >>
+If the index exists, ElasticSearch tries to update the mapping
+which might fail (depending on the changes to the mapping).
 
-=head2 upgrade
+To create the indices from scratch, pass C<< delete => 1 >>:
 
-C<upgrade> will try to add non-existing indices and update the
-mapping on existing indices. Depending on the changes to
-the mapping this might or might not succeed.
+ $mode->deploy( delete => 1 );

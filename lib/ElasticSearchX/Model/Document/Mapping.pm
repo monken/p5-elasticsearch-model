@@ -41,7 +41,6 @@ $MAPPING{Str} = sub {
                                  index => 'not_analyzed',
                                  $attr->boost ? ( boost => $attr->boost ) : (),
                                  type => $attr->type,
-                                 %term,
                 } ) : () ),
                 analyzed => { store => $attr->store,
                            index => 'analyzed',

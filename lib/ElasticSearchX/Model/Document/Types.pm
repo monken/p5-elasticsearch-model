@@ -26,7 +26,7 @@ coerce ES, from Str, via {
     $server = "127.0.0.1$server" if ( $server =~ /^:/ );
     return
       ElasticSearch->new( servers   => $server,
-                          transport => 'http',
+                          transport => 'httptiny',
                           timeout   => 30, );
 };
 
@@ -39,7 +39,7 @@ coerce ES, from ArrayRef, via {
     @servers = map { /^:/ ? "127.0.0.1$_" : $_ } @servers;
     return
       ElasticSearch->new( servers   => \@servers,
-                          transport => 'http',
+                          transport => 'httptiny',
                           timeout   => 30, );
 };
 

@@ -24,6 +24,7 @@ $MAPPING{Any} = sub {
              $attr->index ? ( index => $attr->index ) : (),
              $attr->type eq 'object' ? ( dynamic => $attr->dynamic ) : (),
              $attr->boost ? ( boost => $attr->boost ) : (),
+             !$attr->include_in_all ? ( include_in_all => \0 ) : (),
              type  => 'string',
              $attr->analyzer->[0] ? ( analyzer => $attr->analyzer->[0] ) : (), );
 };
@@ -39,6 +40,7 @@ $MAPPING{Str} = sub {
             fields => {
                 ($attr->not_analyzed ? ($attr->name => { store => $attr->store,
                                  index => 'not_analyzed',
+                                 !$attr->include_in_all ? ( include_in_all => \0 ) : (),
                                  $attr->boost ? ( boost => $attr->boost ) : (),
                                  type => $attr->type,
                 } ) : () ),
@@ -84,7 +86,7 @@ $MAPPING{ScalarRef} = sub {
     return maptc( $attr, find_type_constraint('Str') );
 };
 
-$MAPPING{'ArrayRef'} = sub {
+$MAPPING{ArrayRef} = sub {
     my ( $attr, $tc ) = @_;
     return maptc( $attr, find_type_constraint('Str') );
 };

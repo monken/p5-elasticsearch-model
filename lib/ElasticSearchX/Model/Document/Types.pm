@@ -5,6 +5,7 @@ use DateTime::Format::ISO8601;
 use ElasticSearch;
 use MooseX::Attribute::Deflator;
 use DateTime;
+use JSON;
 use Scalar::Util qw(blessed);
 
 use MooseX::Types -declare => [
@@ -84,6 +85,8 @@ my @stat =
   qw(dev ino mode nlink uid gid rdev size atime mtime ctime blksize blocks);
 deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } };
 deflate 'ScalarRef', via { ref $_ ? $$_ : $_ };
+deflate 'HashRef', via { shift->dynamic ? $_ : encode_json($_) };
+inflate 'HashRef', via { shift->dynamic ? $_ : decode_json($_) };
 deflate 'DateTime', via { $_->iso8601 };
 inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime( $_ ) };
 deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] };

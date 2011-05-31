@@ -19,6 +19,7 @@ subtype Resources,
 
 has default => ();
 has date    => ( isa => 'DateTime' );
+has pod     => ( include_in_all => 0 );
 has loc     => ( isa => Location );
 has res     => ( isa => Resources );
 has abstract =>
@@ -34,7 +35,7 @@ use warnings;
 my $meta = MyClass->meta;
 
 is_deeply( [ sort map { $_->name } $meta->get_all_properties ],
-           [qw(abstract date default loc module modules res)] );
+           [qw(abstract date default loc module modules pod res)] );
 
 my $module = $meta->get_attribute('module')->build_property;
 my $modules = $meta->get_attribute('module')->build_property;
@@ -71,6 +72,11 @@ is_deeply(
            default => { 'index' => 'not_analyzed',
                         'store' => 'yes',
                         'type'  => 'string'
+           },
+           pod => { 'index' => 'not_analyzed',
+                        'store' => 'yes',
+                        'type'  => 'string',
+                        include_in_all => \0,
            },
            loc    => { 'type' => 'geo_point' },
            module => $module,

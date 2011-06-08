@@ -20,7 +20,7 @@ use ElasticSearchX::Model;
 analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
 analyzer fulltext  => ( type      => 'snowball', language => 'English' );
 
-index twitter => ( namespace => 'MyModel::Twitter' );
+index twitter => ( namespace => 'MyModel::Twitter', alias_for => 'twitter_v1' );
 index irc     => ( namespace => 'MyModel::IRC', traits => [qw(MyIndexTrait)] );
 
 __PACKAGE__->meta->make_immutable;
@@ -35,10 +35,11 @@ my $meta = $model->meta;
 ok( $model->does('ElasticSearchX::Model::Role'), 'Does role' );
 
 is_deeply( [ $meta->get_index_list ],
-           [ 'irc', 'twitter' ],
+           [ 'irc', 'twitter', 'twitter_v1' ],
            'Has index twitter' );
 
 ok( my $idx = $model->index('twitter'), 'Get index twitter' );
+ok( my $idx = $model->index('twitter_v1'), 'Get index twitter_v1' );
 
 is_deeply( $idx->types,
            {  user  => MyModel::Twitter::User->meta,

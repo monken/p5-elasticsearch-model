@@ -18,6 +18,7 @@ sub deploy {
     my $t = $self->es->transport;
     foreach my $name ( $self->meta->get_index_list ) {
         my $index = $self->index($name);
+        next if($index->alias_for && $name eq $index->alias_for);
         $name = $index->alias_for if($index->alias_for);
         try { $t->request( { method => 'DELETE', cmd => "/$name", } ); }
             if($params{delete});

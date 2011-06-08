@@ -27,7 +27,11 @@ has indices => ( traits  => ['Hash'],
             handles => _handles( 'index', 'indices' ) );
 
 before add_index => sub {
-    shift->remove_index('default');
+    my ($self, $name, $index) = @_;
+    $self->remove_index('default');
+    if($index->{alias_for} && $name ne $index->{alias_for}) {
+        return $self->add_index($index->{alias_for}, $index);
+    }
 };
 
 1;

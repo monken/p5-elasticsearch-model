@@ -39,7 +39,7 @@ is_deeply( [ $meta->get_index_list ],
            'Has index twitter' );
 
 ok( my $idx = $model->index('twitter'), 'Get index twitter' );
-ok( my $idx = $model->index('twitter_v1'), 'Get index twitter_v1' );
+ok( $idx = $model->index('twitter_v1'), 'Get index twitter_v1' );
 
 is_deeply( $idx->types,
            {  user  => MyModel::Twitter::User->meta,

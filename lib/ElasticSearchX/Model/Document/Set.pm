@@ -56,8 +56,9 @@ sub put {
 sub inflate_result {
     my ( $self, $res ) = @_;
     my ( $type, $index ) = ( $res->{_type}, $res->{_index} );
-    return $self->model->index($index)->get_type($type)
-      ->new_object( $res->{_source} );
+    $index = $self->model->index($index);
+    return $index->get_type($type)
+      ->new_object( { %{$res->{_source}}, index => $index, _id => $res->{_id} } );
 }
 
 sub get {

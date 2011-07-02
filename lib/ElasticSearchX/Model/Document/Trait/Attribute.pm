@@ -18,6 +18,7 @@ has analyzer => ( is => 'ro', isa => ArrayRef, coerce => 1, default => sub { [] 
 has not_analyzed => ( is => 'ro', isa => 'Bool', default => 1 );
 has term_vector => ( is => 'ro', isa => 'Str' );
 has include_in_all => ( is => 'ro', isa => 'Bool', default => 1 );
+has source_only => ( is => 'ro', isa => 'Bool', default => 0 );
 
 sub build_property {
     my $self = shift;

@@ -11,9 +11,10 @@ has _inflated_attributes => ( is => 'rw', isa => 'HashRef', lazy => 1, default =
 has index => ( isa      => 'ElasticSearchX::Model::Index',
                is       => 'rw' );
 
+has _id => ( is => 'ro' );
+
 sub put {
     my ( $self, $qs ) = @_;
-    my $id = $self->meta->get_id_attribute;
     return $self->index->model->es->index( $self->_put, %$qs );
 }
 

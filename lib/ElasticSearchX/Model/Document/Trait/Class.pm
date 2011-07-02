@@ -16,10 +16,14 @@ sub mapping {
     my $self  = shift;
     my $props = {
         map { $_->name => $_->build_property }
-        sort { $a->name cmp $b->name } $self->get_all_properties
+        sort { $a->name cmp $b->name }
+        grep { !$_->source_only }
+        grep { !$_->parent } $self->get_all_properties
     };
+    my $parent = $self->get_parent_attribute;
     return {
         _source    => { compress => \1 },
+        $parent ? ( _parent => { type => $parent->name } ) : (),
         dynamic    => \0,
         properties => $props,
     };
@@ -36,6 +40,13 @@ sub get_id_attribute {
     my ( $id, $more )
         = grep { $_->id } $self->get_all_properties;
     croak "Cannot have more than one id field on a class" if ($more);
+    return $id;
+}
+sub get_parent_attribute {
+    my $self = shift;
+    my ( $id, $more )
+        = grep { $_->parent } $self->get_all_properties;
+    croak "Cannot have more than one parent field on a class" if ($more);
     return $id;
 }
 

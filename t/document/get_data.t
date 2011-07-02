@@ -13,6 +13,7 @@ has module => ( isa => Type ['MyType'], required => 0 );
 has hash => ( isa => 'HashRef', required => 0 );
 has hash_dynamic => ( isa => 'HashRef', required => 0, dynamic => 1 );
 has author => ( required => 0 );
+has extra => ( source_only => 1, required => 0, dynamic => 1 );
 
 package MyModel;
 use Moose;
@@ -74,6 +75,18 @@ my $model = MyModel->new;
         $doc->meta->get_data($doc),
         { hash_dynamic => { foo => 1 } },
         'don\'t store undef fields'
+    );
+}
+
+{
+    my $doc = MyModel::MyClass->new(
+        extra => { foo => 'bar' },
+        index        => $model->index('static')
+    );
+    is_deeply(
+        $doc->meta->get_data($doc),
+        { extra => { foo => 'bar' } },
+        'extra field is included'
     );
 }
 

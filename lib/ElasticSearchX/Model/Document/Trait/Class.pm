@@ -5,8 +5,14 @@ use Carp;
 use Scope::Guard;
 
 has bulk_size => ( isa => 'Int', default => 10, is => 'rw' );
-has set_class =>
-    ( is => 'ro', default => 'ElasticSearchX::Model::Document::Set' );
+has set_class => ( is => 'ro', builder => '_build_set_class', lazy => 1 );
+
+sub _build_set_class {
+    my $self = shift;
+    my $set  = $self->name . '::Set';
+    eval { Class::MOP::load_class($set); } and return $set
+        or return 'ElasticSearchX::Model::Document::Set';
+}
 
 sub bulk_commit {
 
@@ -22,7 +28,7 @@ sub mapping {
     };
     my $parent = $self->get_parent_attribute;
     return {
-        _source    => { compress => \1 },
+        _source => { compress => \1 },
         $parent ? ( _parent => { type => $parent->name } ) : (),
         dynamic    => \0,
         properties => $props,
@@ -37,15 +43,14 @@ sub short_name {
 
 sub get_id_attribute {
     my $self = shift;
-    my ( $id, $more )
-        = grep { $_->id } $self->get_all_properties;
+    my ( $id, $more ) = grep { $_->id } $self->get_all_properties;
     croak "Cannot have more than one id field on a class" if ($more);
     return $id;
 }
+
 sub get_parent_attribute {
     my $self = shift;
-    my ( $id, $more )
-        = grep { $_->parent } $self->get_all_properties;
+    my ( $id, $more ) = grep { $_->parent } $self->get_all_properties;
     croak "Cannot have more than one parent field on a class" if ($more);
     return $id;
 }
@@ -64,8 +69,7 @@ sub bulk_index {
     my ( $self, $es, $bulk, $force ) = @_;
     while ( @$bulk > $self->bulk_size || $force ) {
         my @step = splice( @$bulk, 0, $self->bulk_size );
-        my @data
-            = map { { create => { $_->_index } } }
+        my @data = map { { create => { $_->_index } } }
             map { $self->name->new(%$_) } @step;
 
         $es->bulk(@data);

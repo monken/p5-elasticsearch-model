@@ -23,6 +23,7 @@ sub put {
     my $return = $self->index->model->es->index( $self->_put,
         $parent ? ( parent => $parent->get_value($self) ) : (), %$qs );
     $id->set_value( $self, $return->{_id} ) if ($id);
+    $self->meta->get_attribute('_id')->set_value( $self, $return->{_id} );
     return $self;
 }
 
@@ -44,7 +45,7 @@ sub delete {
     my $return = $self->index->model->es->delete(
         index => $self->index->name,
         type  => $self->meta->short_name,
-        id    => $id->get_value($self),
+        id    => $self->_id,
         %$qs
     );
     return $self;

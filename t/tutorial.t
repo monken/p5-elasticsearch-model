@@ -30,15 +30,15 @@ use DateTime;
 
 my $twitter   = $model->index('twitter');
 my $timestamp = DateTime->now;
-ok(
-    my $tweet = $twitter->type('tweet')->put(
-                                              { user      => 'mo',
-                                                post_date => $timestamp,
-                                                message   => 'Elastic baby!',
-                                              },
-                                              { refresh => 1 }
+ok( my $tweet = $twitter->type('tweet')->put(
+        {   user      => 'mo',
+            post_date => $timestamp,
+            message   => 'Elastic baby!',
+        },
+        { refresh => 1 }
     ),
-    'Put ok' );
+    'Put ok'
+);
 
 my $tweets = $twitter->type('tweet');
 
@@ -51,28 +51,37 @@ qr/fields/;
 
 ok( $tweets->get( $tweet->id ), 'Get tweet by id' );
 
-ok(
-    $tweet = $tweets->get(
-                           { user      => 'mo',
-                             post_date => $timestamp,
-                           }
+ok( $tweet = $tweets->get(
+        {   user      => 'mo',
+            post_date => $timestamp,
+        }
     ),
-    'Get tweet by key/values' );
+    'Get tweet by key/values'
+);
 
 isa_ok( $tweet->post_date, 'DateTime' );
-my $raw = { _id     => $tweet->id,
-            _index  => "twitter",
-            _source => { id        => $tweet->id,
-                         message   => "Elastic baby!",
-                         post_date => $timestamp->iso8601,
-                         user      => "mo"
-            },
-            _type    => "tweet",
-            _version => 1 };
-is_deeply( $tweets->inflate(0)->get( $tweet->id ), $raw, 'Raw response' );
+my $raw = {
+    _id     => $tweet->id,
+    _index  => "twitter",
+    _source => {
+        id        => $tweet->id,
+        message   => "Elastic baby!",
+        post_date => $timestamp->iso8601,
+        user      => "mo"
+    },
+    _type    => "tweet",
+    _version => 1
+};
+is_deeply(
+    $tweets->inflate(0)->get( $tweet->id ),
+    { %$raw, exists => 'true' },
+    'Raw response'
+);
 
-is_deeply( $tweets->all->{hits},
-           { hits => [ { %$raw, _score => 1 } ], max_score => 1, total => 1 },
-           'Raw all response' );
+is_deeply(
+    $tweets->all->{hits},
+    { hits => [ { %$raw, _score => 1 } ], max_score => 1, total => 1 },
+    'Raw all response'
+);
 
 done_testing;

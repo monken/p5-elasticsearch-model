@@ -15,12 +15,16 @@ has hash_dynamic => ( isa => 'HashRef', required => 0, dynamic => 1 );
 has author => ( required => 0 );
 has extra => ( source_only => 1, required => 0, dynamic => 1 );
 
+MyModel::MyClass->meta->make_immutable;
+
 package MyModel;
 use Moose;
 use ElasticSearchX::Model;
 
 index static  => ( dynamic => 0 );
 index dynamic => ( dynamic => 1 );
+
+MyModel->meta->make_immutable;
 
 package main;
 use Test::More;

@@ -50,8 +50,18 @@ has inflate =>
 
 sub _build_query {
     my $self = shift;
-    {   query => { match_all => {} },
-        ( $self->filter ? ( filter => $self->filter ) : () )
+    {   query => {
+            $self->filter
+            ? ( filtered => {
+                    query  => { match_all => {} },
+                    filter => $self->filter
+                }
+                )
+            : ( match_all => {} )
+
+        },
+        $self->size ? ( size => $self->size ) : (),
+        $self->from ? ( size => $self->from ) : (),
     };
 }
 

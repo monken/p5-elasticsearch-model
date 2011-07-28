@@ -32,12 +32,18 @@ my $REGISTRY = Moose::Util::TypeConstraints->get_type_constraint_registry;
 
 $REGISTRY->add_type_constraint(
     Moose::Meta::TypeConstraint::Parameterizable->new(
-        name               => Type,
-        package_defined_in => __PACKAGE__,
-        parent             => find_type_constraint('Object'),
-        constraint_generator => sub { sub { blessed $_ && $_->isa('Moose::Object') && $_->does('ElasticSearchX::Model::Document::Role') } },
+        name                 => Type,
+        package_defined_in   => __PACKAGE__,
+        parent               => find_type_constraint('Object'),
+        constraint_generator => sub {
+            sub {
+                blessed $_
+                    && $_->can('_does_elasticsearchx_model_document_role')
+                }
+        },
     )
 );
+
 
 Moose::Util::TypeConstraints::add_parameterizable_type($REGISTRY->get_type_constraint(Type));
 

@@ -6,6 +6,8 @@ use Digest::SHA1;
 use List::MoreUtils ();
 use Carp;
 
+sub _does_elasticsearchx_model_document_role {1}
+
 has _inflated_attributes =>
     ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { {} } );
 

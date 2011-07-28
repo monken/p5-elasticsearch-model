@@ -114,7 +114,7 @@ $MAPPING{'MooseX::Types::Structured::Optional[]'} = sub {
     return maptc($attr, $constraint->type_parameter);
 };
 
-$MAPPING{'ElasticSearchX::Model::Document::Types::Location'} = sub {
+$MAPPING{'MooseX::Types::ElasticSearch::Location'} = sub {
     my ( $attr, $tc ) = @_;
     my %mapping = maptc($attr, $tc->parent);
     delete $mapping{$_} for(qw(index store));

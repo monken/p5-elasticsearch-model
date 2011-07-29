@@ -8,7 +8,7 @@ package MyClass;
 use Moose;
 use ElasticSearchX::Model::Document;
 use ElasticSearchX::Model::Document::Types qw(:all);
-use MooseX::Types -declare => ['Resources'];
+use MooseX::Types -declare => [ 'Resources', 'Profile' ];
 use MooseX::Types::Structured qw(Dict Tuple Optional);
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef Undef/;
 
@@ -18,15 +18,19 @@ subtype Resources, as Dict [
     bugtracker => Optional [ Dict [ web => Str, mailto => Str ] ]
 ];
 
+subtype Profile, as ArrayRef [ Dict [ id => Str ] ];
+coerce Profile, from HashRef, via { [$_] };
+
 has default => ();
-has date    => ( isa => 'DateTime' );
-has pod     => ( include_in_all => 0 );
-has loc     => ( isa => Location );
-has res     => ( isa => Resources );
+has profile => ( isa => Profile, type => 'nested', include_in_root => 1 );
+has date => ( isa            => 'DateTime' );
+has pod  => ( include_in_all => 0 );
+has loc  => ( isa            => Location );
+has res  => ( isa            => Resources );
 has abstract =>
     ( analyzer => 'lowercase', term_vector => 'with_positions_offsets' );
-has module => ( isa => Type ['MyType'] );
-has modules => ( isa => ArrayRef [ Type ['MyType'] ] );
+has module => ( isa => Type ['MyType'], type => 'nested', include_in_root => 1 );
+has modules => ( isa => ArrayRef [ Type ['MyType'] ], type => 'nested', include_in_root => 1 );
 has extra => ( source_only => 1 );
 has vater => ( parent      => 1 );
 
@@ -37,15 +41,20 @@ use warnings;
 
 my $meta = MyClass->meta;
 
-is_deeply( [ sort map { $_->name } $meta->get_all_properties ],
-    [qw(abstract date default extra loc module modules pod res vater)] );
+is_deeply(
+    [ sort map { $_->name } $meta->get_all_properties ],
+    [   qw(abstract date default extra loc module modules pod profile res vater)
+    ]
+);
 
 my $module  = $meta->get_attribute('module')->build_property;
-my $modules = $meta->get_attribute('module')->build_property;
+my $modules = $meta->get_attribute('modules')->build_property;
 is_deeply(
     $module,
     {   _source    => { compress => \1 },
         dynamic    => \0,
+        type       => 'nested',
+        include_in_root => \1,
         properties => {
             name => {
                 fields => {
@@ -53,12 +62,12 @@ is_deeply(
                         analyzer => "standard",
                         index    => "analyzed",
                         store    => "yes",
-                        type     => "string"
+                        type     => "string",
                     },
                     name => {
                         index => "not_analyzed",
                         store => "yes",
-                        type  => "string"
+                        type  => "string",
                     }
                 },
                 type => "multi_field"
@@ -78,6 +87,18 @@ is_deeply(
             date => {
                 'store' => 'yes',
                 'type'  => 'date'
+            },
+            profile => {
+                type            => 'nested',
+                include_in_root => \1,
+                dynamic         => \0,
+                properties      => {
+                    id => {
+                        index => 'not_analyzed',
+                        store => 'yes',
+                        type  => 'string',
+                    }
+                }
             },
             default => {
                 'index' => 'not_analyzed',

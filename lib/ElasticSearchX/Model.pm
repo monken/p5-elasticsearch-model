@@ -4,6 +4,7 @@ package ElasticSearchX::Model;
 use Moose           ();
 use Moose::Exporter ();
 use ElasticSearchX::Model::Index;
+use ElasticSearchX::Model::Bulk;
 
 Moose::Exporter->setup_import_methods(
         with_meta       => [qw(index analyzer tokenizer filter)],

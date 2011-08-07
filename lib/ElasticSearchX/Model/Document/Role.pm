@@ -20,10 +20,8 @@ has _id => ( is => 'ro' );
 
 sub put {
     my ( $self, $qs ) = @_;
-    my $parent = $self->meta->get_parent_attribute;
     my $id     = $self->meta->get_id_attribute;
-    my $return = $self->index->model->es->index( $self->_put,
-        $parent ? ( parent => $parent->get_value($self) ) : (), %$qs );
+    my $return = $self->index->model->es->index( $self->_put, %$qs );
     $id->set_value( $self, $return->{_id} ) if ($id);
     $self->meta->get_attribute('_id')->set_value( $self, $return->{_id} );
     return $self;
@@ -32,12 +30,14 @@ sub put {
 sub _put {
     my ($self) = @_;
     my $id = $self->meta->get_id_attribute;
+    my $parent = $self->meta->get_parent_attribute;
 
     return (
         index => $self->index->name,
         type  => $self->meta->short_name,
         $id ? ( id => $id->get_value($self) ) : (),
         data => $self->meta->get_data($self),
+        $parent ? ( parent => $parent->get_value($self) ) : (),
     );
 }
 

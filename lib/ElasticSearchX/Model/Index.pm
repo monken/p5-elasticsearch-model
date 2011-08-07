@@ -10,7 +10,7 @@ has namespace => ( is => 'ro', lazy_build => 1 );
 
 has [qw(shards replicas)] => ( is => 'ro', default => 1 );
 
-has model => ( is => 'ro', required => 1, handles => [qw(es)] );
+has model => ( is => 'ro', required => 1, handles => [qw(es bulk)] );
 
 has traits => ( isa => 'ArrayRef', is => 'ro', default => sub {[]} );
 

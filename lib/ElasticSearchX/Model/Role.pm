@@ -50,4 +50,9 @@ sub deploy {
     return 1;
 }
 
+sub bulk {
+    my $self = shift;
+    return ElasticSearchX::Model::Bulk->new(es => $self->es, @_);
+}
+
 1;

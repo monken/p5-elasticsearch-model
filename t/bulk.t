@@ -1,25 +1,36 @@
-package Foo;
+package MyModel::User;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-has some => ( is => 'ro' );
-has name => ( is => 'ro', id => 1 );
+package MyModel::Tweet;
+use Moose;
+use ElasticSearchX::Model::Document;
 
-use Test::More;
+has text => ( is => 'ro' );
+
+package MyModel;
+use Moose;
+use ElasticSearchX::Model;
+
+__PACKAGE__->meta->make_immutable;
+
+package main;
+use Test::Most;
 use strict;
 use warnings;
 
-use ElasticSearchX::Model::Document::Bulk;
+ok( my $model = MyModel->new, 'Created object' );
 
-ok(!$ElasticSearchX::Model::Document::Bulk::BULK);
+my $stash;
+{
+    ok( my $bulk = $model->bulk, 'bulk object' );
+    $stash = $bulk->stash;
+    $bulk->put( $model->index('default')->type('tweet')
+            ->new_document( { text => 'foo' } ) );
+    is($bulk->stash_size, 1, 'stash size is 1');
+}
 
-bulk {
-    ok($ElasticSearchX::Model::Document::Bulk::BULK);
-    ok(ElasticSearchX::Model::Document::Bulk::is_bulk);
-};
-
-ok(!$ElasticSearchX::Model::Document::Bulk::BULK);
-ok(!ElasticSearchX::Model::Document::Bulk::is_bulk);
+is_deeply($stash, [], 'stash has been commited');
 
 
 done_testing;

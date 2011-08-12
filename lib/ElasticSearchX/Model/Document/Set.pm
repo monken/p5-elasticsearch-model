@@ -23,7 +23,7 @@ has filtered => ( isa => 'Bool', is => 'rw', traits => [qw(Chained)] );
 
 has [qw(from size)] => ( isa => 'Int', is => 'rw', traits => [qw(Chained)] );
 
-has sort => (
+has [qw(fields sort)] => (
     isa    => 'ArrayRef',
     is     => 'rw',
     traits => [qw(Chained)]
@@ -60,8 +60,10 @@ sub _build_query {
             : ( match_all => {} )
 
         },
-        $self->size ? ( size => $self->size ) : (),
-        $self->from ? ( size => $self->from ) : (),
+        $self->size   ? ( size   => $self->size )   : (),
+        $self->from   ? ( from   => $self->from )   : (),
+        $self->fields ? ( fields => $self->fields ) : (),
+        $self->sort   ? ( sort   => $self->sort )   : (),
     };
 }
 

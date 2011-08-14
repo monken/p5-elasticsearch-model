@@ -1,6 +1,7 @@
 package ElasticSearchX::Model::Index;
 use Moose;
 use Module::Find ();
+use ElasticSearchX::Model::Document::Types qw(:all);
 
 has name => ( is => 'ro' );
 
@@ -12,7 +13,7 @@ has [qw(shards replicas)] => ( is => 'ro', default => 1 );
 
 has model => ( is => 'ro', required => 1, handles => [qw(es bulk)] );
 
-has traits => ( isa => 'ArrayRef', is => 'ro', default => sub {[]} );
+has traits => ( isa => 'ArrayRef', is => 'ro', default => sub { [] } );
 
 has refresh_interval => ( is => 'ro', default => '1s' );
 
@@ -20,24 +21,29 @@ has dynamic => ( is => 'ro', isa => 'Bool', default => 0 );
 
 has alias_for => ( is => 'ro', isa => 'Str' );
 
-has types => ( isa        => 'HashRef',
-               traits     => ['Hash'],
-               is         => 'ro',
-               lazy_build => 1,
-               handles    => {
-                            get_types     => 'values',
-                            get_type_list => 'keys',
-                            add_type      => 'set',
-                            remove_type   => 'delete',
-                            get_type      => 'get',
-               } );
+has types => (
+    isa        => Types,
+    coerce     => 1,
+    traits     => ['Hash'],
+    is         => 'ro',
+    lazy_build => 1,
+    handles    => {
+        get_types     => 'values',
+        get_type_list => 'keys',
+        add_type      => 'set',
+        remove_type   => 'delete',
+        get_type      => 'get',
+    }
+);
 
 sub _build_types {
     my $self      = shift;
     my $namespace = $self->namespace;
     my %stash     = Class::MOP::get_all_metaclasses;
-    my @found = ( Module::Find::findallmod($namespace),
-                  grep { /^\Q$namespace\E::/ } keys %stash );
+    my @found     = (
+        Module::Find::findallmod($namespace),
+        grep {/^\Q$namespace\E::/} keys %stash
+    );
     map { Class::MOP::load_class($_) } @found;
     @found = grep { $_->isa('Moose::Object') } @found;
     return { map { $_->meta->short_name => $_->meta } @found };
@@ -45,8 +51,8 @@ sub _build_types {
 
 sub BUILD {
     my $self = shift;
-    foreach my $trait (@{$self->traits}) {
-        Moose::Util::ensure_all_roles($self, $trait);
+    foreach my $trait ( @{ $self->traits } ) {
+        Moose::Util::ensure_all_roles( $self, $trait );
     }
     return $self;
 }
@@ -56,12 +62,12 @@ sub _build_namespace {
 }
 
 sub type {
-    my ($self, $type) = @_;
+    my ( $self, $type ) = @_;
     my $class = $self->get_type($type)->set_class;
     Class::MOP::load_class($class);
     return $class->new(
         index => $self,
-        type => $self->get_type($type),
+        type  => $self->get_type($type),
     );
 }
 
@@ -76,17 +82,18 @@ sub deployment_statement {
         my $method = "get_${_}_list";
         foreach my $name ( $model->$method ) {
             my $get = "get_$_";
-            $deploy->{settings}->{analysis}->{$_}->{$name} = $model->$get($name);
+            $deploy->{settings}->{analysis}->{$_}->{$name}
+                = $model->$get($name);
         }
     }
     $deploy->{settings}->{index} = {
-        number_of_shards => $self->shards,
+        number_of_shards   => $self->shards,
         number_of_replicas => $self->replicas,
-        refresh_interval => $self->refresh_interval
+        refresh_interval   => $self->refresh_interval
     };
-    
+
     $deploy->{settings}->{index}->{mapper}->{dynamic} = \0
-        unless($self->dynamic);
+        unless ( $self->dynamic );
 
     return $deploy;
 }

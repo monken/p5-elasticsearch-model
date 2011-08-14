@@ -71,7 +71,8 @@ __END__
 
 This class extends Moose to include meta information for ElasticSearch.
 By default, each attribute is treated as property of an ElasticSearch
-type. The type name is derived from the class name. See
+type (i.e. the L<ElasticSearchX::Model::Document::Trait::Attribute>
+trait is applied). The type name is derived from the class name. See
 L<ElasticSearchX::Model::Document::Trait::Class>.
 
 See L<ElasticSearchX::Model::Document::Trait::Attribute/ATTRIBUTES> for a full 

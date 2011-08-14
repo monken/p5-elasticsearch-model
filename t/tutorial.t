@@ -22,6 +22,11 @@ index twitter => ( namespace => 'MyModel' );
 
 package main;
 use Test::Most;
+use IO::Socket::INET;
+
+unless(IO::Socket::INET->new('127.0.0.1:9900')) {
+    plan skip_all => 'Requires an ElasticSearch server running on port 9900';
+}
 
 my $model = MyModel->new;
 ok( $model->deploy( delete => 1 ), 'Deploy ok' );

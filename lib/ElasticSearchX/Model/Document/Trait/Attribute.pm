@@ -8,39 +8,46 @@ use ElasticSearchX::Model::Document::Types;
 use MooseX::Types::Moose qw(ArrayRef);
 
 has id => ( is => 'ro', isa => 'Bool|ArrayRef', default => 0 );
-has index  => ( is => 'ro' );
-has boost  => ( is => 'ro', isa        => 'Num' );
-has store  => ( is => 'ro', isa        => 'Str', default => 'yes' );
-has type   => ( is => 'ro', isa        => 'Str', default => 'string' );
-has parent => ( is => 'ro', isa        => 'Bool', default => 0 );
-has dynamic => ( is => 'ro', isa        => 'Bool', default => 0 );
-has analyzer => ( is => 'ro', isa => ArrayRef, coerce => 1, default => sub { [] } );
-has not_analyzed => ( is => 'ro', isa => 'Bool', default => 1 );
-has term_vector => ( is => 'ro', isa => 'Str' );
+has index   => ( is => 'ro' );
+has boost   => ( is => 'ro', isa => 'Num' );
+has store   => ( is => 'ro', isa => 'Str', default => 'yes' );
+has type    => ( is => 'ro', isa => 'Str', default => 'string' );
+has parent  => ( is => 'ro', isa => 'Bool', default => 0 );
+has dynamic => ( is => 'ro', isa => 'Bool', default => 0 );
+has analyzer =>
+    ( is => 'ro', isa => ArrayRef, coerce => 1, default => sub { [] } );
+has not_analyzed   => ( is => 'ro', isa => 'Bool', default => 1 );
+has term_vector    => ( is => 'ro', isa => 'Str' );
 has include_in_all => ( is => 'ro', isa => 'Bool', default => 1 );
-has source_only => ( is => 'ro', isa => 'Bool', default => 0 );
-has include_in_root => ( is => 'ro', isa => 'Bool' );
+has source_only    => ( is => 'ro', isa => 'Bool', default => 0 );
+has include_in_root   => ( is => 'ro', isa => 'Bool' );
 has include_in_parent => ( is => 'ro', isa => 'Bool' );
 
 sub build_property {
     my $self = shift;
-    return { ElasticSearchX::Model::Document::Mapping::maptc($self, $self->type_constraint) };
+    return {
+        ElasticSearchX::Model::Document::Mapping::maptc(
+            $self, $self->type_constraint
+        )
+    };
 }
 
 before _process_options => sub {
     my ( $self, $name, $options ) = @_;
     %$options = ( builder => 'build_id', lazy => 1, %$options )
-      if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
+        if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
     $options->{traits} ||= [];
-    push(@{$options->{traits}}, 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute')
-        if($options->{property} || !exists $options->{property});
+    push(
+        @{ $options->{traits} },
+        'MooseX::Attribute::LazyInflator::Meta::Role::Attribute'
+    ) if ( $options->{property} || !exists $options->{property} );
 };
 
 after _process_options => sub {
     my ( $class, $name, $options ) = @_;
-    if (    $options->{required}
-         && !$options->{builder}
-         && !defined $options->{default} )
+    if (   $options->{required}
+        && !$options->{builder}
+        && !defined $options->{default} )
     {
         $options->{lazy}     = 1;
         $options->{required} = 1;
@@ -49,9 +56,6 @@ after _process_options => sub {
         };
     }
 };
-
-
-
 
 1;
 

@@ -15,7 +15,7 @@ L<ElasticSearchX::Model> can help to make it even more elastic.
 
 ElasticSearch is a document-based storage system. Even though it states
 that it is schema free, it is not recommended to use ElasticSearch
-without defining a proper schema or type, as ElasticSearch calls it.
+without defining a proper schema or mapping, as ElasticSearch calls it.
 
 L<ElasticSearchX::Model::Document> takes care of that. The ElasticSearch example
 consists of two types: C<tweet> and C<user>. The C<tweet> type
@@ -27,17 +27,17 @@ this looks like:
  use Moose;
  use ElasticSearchX::Model::Document;
  
- has id => ( id => [qw(user post_date)] );
- has user => ( isa => 'Str' );
+ has id        => ( id => [qw(user post_date)] );
+ has user      => ( isa => 'Str' );
  has post_date => ( isa => 'DateTime' );
- has message => ( isa => 'Str' );
+ has message   => ( isa => 'Str' );
  
  package MyModel::User;
  use Moose;
  use ElasticSearchX::Model::Document;
  
  has nickname => ( isa => 'Str', id => 1 );
- has name => ( isa => 'Str' );
+ has name     => ( isa => 'Str' );
  
 By default, all attributes defined in L<ElasticSearchX::Model::Document> classes
 are required and a read-only accessor is set up. This is different from
@@ -50,9 +50,9 @@ digested using SHA1 and used as id for the document. If you want to
 change the message of the tweet, you don't have to delete the old record
 and add a new one but simply change the message and reindex the document.
 Since the id will stay the same, the new record will overwrite the old one.
-Also, you don't have to keep track of incrementing document ids.
+Also, you don't have to keep track of incrementing numerical document ids.
 
-In the User class, the C<nickname> attribute acts as id. Since it does not
+In the C<User> class, the C<nickname> attribute acts as id. Since it does not
 depend on the value of any other attribute, the id matches the nickname.
 
 ElasticSearch will assign a random id to the document if there is
@@ -80,7 +80,7 @@ This is all you need to define the index and its types. The namespace option
 of the index C<twitter> will load all classes in the C<MyModel> namespace
 and add them to the twitter index. Actually, you don't even have to define
 the namespace in this case, since the namespace defaults to the name of the
-mode class. You can also load types explicitly bydefining a C<types> option:
+model class. You can also load types explicitly bydefining a C<types> option:
 
  index twitter => ( types => [MyModel::Tweet->meta, MyModel::User->meta] );
 

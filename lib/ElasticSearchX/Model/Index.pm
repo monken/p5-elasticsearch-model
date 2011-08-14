@@ -102,6 +102,15 @@ __END__
 
 =head1 ATTRIBUTES
 
+=head2 name
+
+The name of the index.
+
+=head2 alias_for
+
+If given, this name is used as the index name in ElasticSearch. The
+L</name> is added as alias to L</alias_for>.
+
 =head2 dynamic
 
 By default, indices are not dynamic. That means that fields that
@@ -113,7 +122,7 @@ to C<1> value.
 
 =head2 namespace
 
-Types are loaded from this namespace if the y are not explicitly 
+Types are loaded from this namespace if they are not explicitly 
 defined using L</types>. The namespace defaults to the package
 name of the model.
 
@@ -127,13 +136,42 @@ Indices can be refreshed manually by calling L</refresh>.
 
 =head2 types
 
-An arrayref of L<ElasticSearchX::Model::Document> meta objects.
+A HashRef where the key is an indentifier for the value,
+the L<ElasticSearchX::Model::Document> meta object. This attribute
+is automatically built if it isn't provided. It uses L</namespace>
+to look for L<ElasticSearchX::Model::Document> classes. The name is
+derived from the class name by lowercasing the last name segment
+(i.e. C<MyModel::Tweet> becomes C<tweet>).
 
 =head2 traits
 
-An arrayref of traits which are applied to the index object.
+An ArrayRef of traits which are applied to the index object.
 This is useful if you want to alter the behaviour of methods
 like L</deploy>.
+
+=head2 model
+
+This attribute is set automatically by the model class when
+you add an index. It can be used to access the model through
+the index object.
+
+=head2 shards
+
+=head2 replicas
+
+Sets the number of shards and replicas. Both default to C<1>.
+
+=head2 refresh_interval
+
+Sets the refresh interval. Defaults to C<1s>.
+
+=head2 es
+
+The L<ElasticSearch> object.
+
+=head2 bulk
+
+Returns an instance of L<ElasticSearchX::Model::Bulk>.
 
 =head1 METHODS
 

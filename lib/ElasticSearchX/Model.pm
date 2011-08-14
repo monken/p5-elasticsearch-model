@@ -51,7 +51,7 @@ __END__
  use ElasticSearchX::Model::Document;
 
  has message => ( isa => 'Str' );
- has date => ( isa => 'DateTime' );
+ has date    => ( isa => 'DateTime', default => sub { DateTime->now } );
 
  package MyModel;
  use Moose;
@@ -62,13 +62,12 @@ __END__
   my $model = MyModel->new;
   $model->deploy;
   $model->index('default')->type('tweet')->put({
-      message => 'Hello there!',
-      date => DateTime->now,
+      message => 'Hello there!'
   });
 
 =head1 DESCRIPTION
 
-This an ElasticSearch to Moose mapper which hides the REST api
+This is an ElasticSearch to Moose mapper which hides the REST api
 behind object-oriented api calls. ElasticSearch types and indices
 are defined using Moose classes and a flexible DSL.
 
@@ -77,8 +76,8 @@ using these classes. Results from ElasticSearch inflate automatically
 to the corresponding Moose classes. Furthermore, it provides
 sensible defaults.
 
-The search API makes the tedious task of building 
-ElasticSearch queries a lot easier.
+The search API makes the tedious task of building ElasticSearch queries
+a lot easier.
 
 B<< The L<ElasticSearchX::Model::Tutorial> is probably the best place
 to start! >>
@@ -128,6 +127,11 @@ defaults as above.
 Passes C<%args> directly to the L<ElasticSearch> constructor.
 
 =back
+
+=head2 bulk
+
+Returns an instance of L<ElasticSearchX::Model::Bulk>.
+
 
 =head1 METHODS
 

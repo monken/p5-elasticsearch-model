@@ -6,7 +6,8 @@ use Scope::Guard;
 
 has bulk_size => ( isa => 'Int', default => 10, is => 'rw' );
 has set_class => ( is => 'ro', builder => '_build_set_class', lazy => 1 );
-has _all_properties => ( is => 'ro', lazy => 1, builder => '_build_all_properties' );
+has _all_properties =>
+    ( is => 'ro', lazy => 1, builder => '_build_all_properties' );
 
 sub _build_set_class {
     my $self = shift;
@@ -58,14 +59,16 @@ sub get_parent_attribute {
 
 sub get_all_properties {
     my $self = shift;
-    return @{$self->_all_properties}
-        if($self->is_immutable);
-    return @{$self->_build_all_properties};
+    return @{ $self->_all_properties }
+        if ( $self->is_immutable );
+    return @{ $self->_build_all_properties };
 }
 
 sub _build_all_properties {
-    return [ grep { $_->does('ElasticSearchX::Model::Document::Trait::Attribute') }
-        shift->get_all_attributes ];
+    return [
+        grep { $_->does('ElasticSearchX::Model::Document::Trait::Attribute') }
+            shift->get_all_attributes
+    ];
 }
 
 sub put_mapping {

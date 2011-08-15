@@ -36,6 +36,7 @@ before _process_options => sub {
     my ( $self, $name, $options ) = @_;
     %$options = ( builder => 'build_id', lazy => 1, %$options )
         if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
+    $options->{required} = 1 if($options->{id});
     $options->{traits} ||= [];
     push(
         @{ $options->{traits} },

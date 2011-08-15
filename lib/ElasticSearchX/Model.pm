@@ -50,8 +50,13 @@ __END__
  use Moose;
  use ElasticSearchX::Model::Document;
 
- has message => ( isa => 'Str' );
- has date    => ( isa => 'DateTime', default => sub { DateTime->now } );
+ has message => ( is => 'ro', isa => 'Str' );
+ has date => (
+    is       => 'ro',
+    required => 1,
+    isa      => 'DateTime',
+    default  => sub { DateTime->now }
+ );
 
  package MyModel;
  use Moose;
@@ -100,6 +105,16 @@ See L<ElasticSearchX::Model::Index/ATTRIBUTES> for available options.
 =head2 filter
 
  analyzer lowercase => ( tokenizer => 'keyword',  filter   => 'lowercase' );
+ 
+ tokenizer camelcase => (
+     type => 'pattern',
+     pattern => "([^\\p{L}\\d]+)|(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)|(?<=[\\p{L}&&[^\\p{Lu}]])(?=\\p{Lu})|(?<=\\p{Lu})(?=\\p{Lu}[\\p{L}&&[^\\p{Lu}]])"
+ );
+ analyzer camelcase => (
+     type => 'custom',
+     tokenizer => 'camelcase',
+     filter => ['lowercase', 'unique']
+ );
 
 Adds analyzers, tokenizers or filters to all indices. They can
 then be used in attributes of L<ElasticSearchX::Model::Document> classes.

@@ -2,7 +2,7 @@ package MyType;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-has name => ( index => 'analyzed' );
+has name => ( is => 'ro', index => 'analyzed' );
 
 package MyClass;
 use Moose;
@@ -21,18 +21,32 @@ subtype Resources, as Dict [
 subtype Profile, as ArrayRef [ Dict [ id => Str ] ];
 coerce Profile, from HashRef, via { [$_] };
 
-has default => ();
-has profile => ( isa => Profile, type => 'nested', include_in_root => 1 );
-has date => ( isa            => 'DateTime' );
-has pod  => ( include_in_all => 0 );
-has loc  => ( isa            => Location );
-has res  => ( isa            => Resources );
-has abstract =>
-    ( analyzer => 'lowercase', term_vector => 'with_positions_offsets' );
-has module => ( isa => Type ['MyType'], type => 'nested', include_in_root => 1 );
-has modules => ( isa => ArrayRef [ Type ['MyType'] ], type => 'nested', include_in_root => 1 );
-has extra => ( source_only => 1 );
-has vater => ( parent      => 1 );
+has default => ( is => 'ro' );
+has profile =>
+    ( is => 'ro', isa => Profile, type => 'nested', include_in_root => 1 );
+has date => ( is => 'ro', isa            => 'DateTime' );
+has pod  => ( is => 'ro', include_in_all => 0 );
+has loc  => ( is => 'ro', isa            => Location );
+has res  => ( is => 'ro', isa            => Resources );
+has abstract => (
+    is          => 'ro',
+    analyzer    => 'lowercase',
+    term_vector => 'with_positions_offsets'
+);
+has module => (
+    is              => 'ro',
+    isa             => Type ['MyType'],
+    type            => 'nested',
+    include_in_root => 1
+);
+has modules => (
+    is              => 'ro',
+    isa             => ArrayRef [ Type ['MyType'] ],
+    type            => 'nested',
+    include_in_root => 1
+);
+has extra => ( is => 'ro', source_only => 1 );
+has vater => ( is => 'ro', parent      => 1 );
 
 package main;
 use Test::More;
@@ -51,11 +65,11 @@ my $module  = $meta->get_attribute('module')->build_property;
 my $modules = $meta->get_attribute('modules')->build_property;
 is_deeply(
     $module,
-    {   _source    => { compress => \1 },
-        dynamic    => \0,
-        type       => 'nested',
+    {   _source         => { compress => \1 },
+        dynamic         => \0,
+        type            => 'nested',
         include_in_root => \1,
-        properties => {
+        properties      => {
             name => {
                 fields => {
                     analyzed => {

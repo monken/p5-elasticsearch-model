@@ -28,8 +28,6 @@ sub has {
         if($options{property} || !exists $options{property});
     delete $options{property};
     
-    $options{required} = 1    unless ( exists $options{required} );
-    $options{is}       = 'ro' unless ( exists $options{is} );
     my $attrs = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
     $meta->add_attribute( $_, %options ) for @$attrs;
 }
@@ -61,11 +59,11 @@ __END__
             homepage => Optional [Str],
             bugtracker => Optional [ Dict [ web => Str, mailto => Str ] ] ];
 
- has default  => ();
- has date     => ( isa => 'DateTime' );
- has location => ( isa => Location );
- has res      => ( isa => Resources );
- has abstract => ( analyzer => 'lowercase' );
+ has default  => ( is => 'ro' );
+ has date     => ( is => 'ro', isa => 'DateTime' );
+ has location => ( is => 'ro', isa => Location );
+ has res      => ( is => 'ro', isa => Resources );
+ has abstract => ( is => 'ro', analyzer => 'lowercase' );
 
 =head1 DESCRIPTION
 

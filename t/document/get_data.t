@@ -2,18 +2,19 @@ package MyModel::MyType;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-has name => ( index => 'analyzed' );
+has name => ( is => 'ro', index => 'analyzed' );
 
 package MyModel::MyClass;
 use Moose;
 use ElasticSearchX::Model::Document;
 use ElasticSearchX::Model::Document::Types qw(:all);
 
-has module => ( isa => Type ['MyType'], required => 0 );
-has hash => ( isa => 'HashRef', required => 0 );
-has hash_dynamic => ( isa => 'HashRef', required => 0, dynamic => 1 );
-has author => ( required => 0 );
-has extra => ( source_only => 1, required => 0, dynamic => 1 );
+has module => ( is => 'ro', isa => Type ['MyType'], required => 0 );
+has hash => ( is => 'ro', isa => 'HashRef', required => 0 );
+has hash_dynamic =>
+    ( is => 'ro', isa => 'HashRef', required => 0, dynamic => 1 );
+has author => ( is => 'ro', required => 0 );
+has extra => ( is => 'ro', source_only => 1, required => 0, dynamic => 1 );
 
 MyModel::MyClass->meta->make_immutable;
 
@@ -85,7 +86,7 @@ my $model = MyModel->new;
 {
     my $doc = MyModel::MyClass->new(
         extra => { foo => 'bar' },
-        index        => $model->index('static')
+        index => $model->index('static')
     );
     is_deeply(
         $doc->meta->get_data($doc),

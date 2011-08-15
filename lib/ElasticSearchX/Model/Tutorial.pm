@@ -27,17 +27,17 @@ this looks like:
  use Moose;
  use ElasticSearchX::Model::Document;
  
- has id        => ( id => [qw(user post_date)] );
- has user      => ( isa => 'Str' );
- has post_date => ( isa => 'DateTime' );
- has message   => ( isa => 'Str' );
+ has id        => ( is => 'ro', id => [qw(user post_date)] );
+ has user      => ( is => 'ro', isa => 'Str' );
+ has post_date => ( is => 'ro', isa => 'DateTime' );
+ has message   => ( is => 'ro', isa => 'Str' );
  
  package MyModel::User;
  use Moose;
  use ElasticSearchX::Model::Document;
  
- has nickname => ( isa => 'Str', id => 1 );
- has name     => ( isa => 'Str' );
+ has nickname => ( is => 'ro', isa => 'Str', id => 1 );
+ has name     => ( is => 'ro', isa => 'Str' );
  
 By default, all attributes defined in L<ElasticSearchX::Model::Document> classes
 are required and a read-only accessor is set up. This is different from

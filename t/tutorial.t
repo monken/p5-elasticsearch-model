@@ -2,17 +2,17 @@ package MyModel::Tweet;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-has id        => ( id  => [qw(user post_date)] );
-has user      => ( isa => 'Str' );
-has post_date => ( isa => 'DateTime' );
-has message   => ( isa => 'Str' );
+has id        => ( is => 'ro', id  => [qw(user post_date)] );
+has user      => ( is => 'ro', isa => 'Str' );
+has post_date => ( is => 'ro', isa => 'DateTime' );
+has message   => ( is => 'ro', isa => 'Str' );
 
 package MyModel::User;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-has nickname => ( isa => 'Str', id => 1 );
-has name => ( isa => 'Str' );
+has nickname => ( is => 'ro', isa => 'Str', id => 1 );
+has name => ( is => 'ro', isa => 'Str' );
 
 package MyModel;
 use Moose;
@@ -24,11 +24,11 @@ package main;
 use Test::Most;
 use IO::Socket::INET;
 
-unless(IO::Socket::INET->new('127.0.0.1:9900')) {
+unless ( IO::Socket::INET->new('127.0.0.1:9900') ) {
     plan skip_all => 'Requires an ElasticSearch server running on port 9900';
 }
 
-my $model = MyModel->new;
+my $model = MyModel->new( es => ':9900' );
 ok( $model->deploy( delete => 1 ), 'Deploy ok' );
 
 use DateTime;

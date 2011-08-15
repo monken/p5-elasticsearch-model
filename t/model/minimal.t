@@ -20,16 +20,16 @@ use warnings;
 ok( my $model = MyModel->new(), 'Created object ok' );
 my $meta = $model->meta;
 
-is_deeply( [ $meta->get_index_list ],
-           [ 'default' ],
-           'Has index default' );
+is_deeply( [ $meta->get_index_list ], ['default'], 'Has index default' );
 
 ok( my $idx = $model->index('default'), 'Get default index' );
 
-is_deeply( $idx->types,
-           {  user  => MyModel::User->meta,
-              tweet => MyModel::Tweet->meta
-           },
-           'Types loaded ok' );
+is_deeply(
+    $idx->types,
+    {   user  => MyModel::User->meta,
+        tweet => MyModel::Tweet->meta
+    },
+    'Types loaded ok'
+);
 
 done_testing;

@@ -7,10 +7,9 @@ has type => ( is => 'ro', required => 1 );
 has index => ( is => 'ro', required => 1, handles => [qw(es model)] );
 
 has query => (
-    isa        => 'HashRef',
-    is         => 'rw',
-    lazy_build => 1,
-    traits     => [qw(Chained)]
+    isa    => 'HashRef',
+    is     => 'rw',
+    traits => [qw(Chained)]
 );
 
 has filter => (
@@ -18,8 +17,6 @@ has filter => (
     is     => 'rw',
     traits => [qw(Chained)]
 );
-
-has filtered => ( isa => 'Bool', is => 'rw', traits => [qw(Chained)] );
 
 has [qw(from size)] => ( isa => 'Int', is => 'rw', traits => [qw(Chained)] );
 
@@ -39,14 +36,16 @@ has fields => (
 
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
 
-has mixin => ( isa => 'HashRef', is => 'rw', traits => [qw(Chained)] );
-
 has query_type => ( isa => QueryType, is => 'rw', traits => [qw(Chained)] );
 
-has version => ( isa => 'Bool', is => 'rw' );
+has mixin => ( is => 'ro', isa => 'HashRef', traits => [qw(Chained)] );
 
 has inflate =>
     ( isa => 'Bool', default => 1, is => 'rw', traits => [qw(Chained)] );
+
+sub raw {
+    shift->inflate(0);
+}
 
 sub _build_query {
     my $self = shift;
@@ -64,10 +63,9 @@ sub _build_query {
         $self->from   ? ( from   => $self->from )   : (),
         $self->fields ? ( fields => $self->fields ) : (),
         $self->sort   ? ( sort   => $self->sort )   : (),
+        $self->mixin ? ( %{ $self->mixin } ) : (),
     };
 }
-
-sub as_query { }
 
 sub put {
     my ( $self, $args, $qs ) = @_;
@@ -139,7 +137,7 @@ sub all {
     my $res = $self->es->transport->request(
         {   method => 'POST',
             cmd    => "/$index/$type/_search",
-            data   => $self->query,
+            data   => $self->_build_query,
             qs     => { version => 1 }
         }
     );
@@ -150,8 +148,8 @@ sub all {
 
 sub first {
     my $self  = shift;
-    my $query = $self->query;
-    my @data  = $self->query( { %$query, size => 1 } )->all;
+    my $query = $self->_build_query;
+    my @data  = $self->_build_query( { %$query, size => 1 } )->all;
     return undef unless (@data);
     return $data[0] if ( $self->inflate );
     return $data[0]->{hits}->{hits}->[0];
@@ -163,10 +161,111 @@ sub count {
     my $res = $self->es->transport->request(
         {   method => 'POST',
             cmd    => "/$index/$type/_search",
-            data   => { %{ $self->query }, size => 0 },
+            data   => { %{ $self->_build_query }, size => 0 },
         }
     );
     return $res->{hits}->{total};
 }
 
 __PACKAGE__->meta->make_immutable;
+
+=head1 SYNOPSIS
+
+ my $type = $model->index('default')->type('tweet');
+ my $all  = $type->all;
+
+ my $result = $type->filter( { term => { message => 'hello' } } )->first;
+ my $tweet
+    = $type->get( { user => 'mo', post_date => DateTime->now->iso8601 } );
+
+=head1 DESCRIPTION
+
+Whenever a type is accessed by calling L<ElasticSearchX::Model::Index/type>
+you will receive an instance of this class.  The instance can then be used
+to build new objects (L</new_document>), put new documents in the index
+(L</put>), do search and so on.
+
+=head1 ATTRIBUTES
+
+All attributes can be chained, i.e. all of them return the
+object and not the value that was passed to it.
+
+=head2 filter
+
+Adds a filter to the query. If no L</query> is given, it will automatically
+build a C<filtered> query, which performs far better.
+
+=head2 query
+
+=head2 size
+
+=head2 from
+
+=head2 fields
+
+=head2 sort
+
+These attributes are passed directly to the ElasticSearch search request.
+
+=head2 mixin
+
+The previously mentioned attributes don't cover all of
+ElasticSearch's options for searching. You can set the
+L</mixin> attribute to a HashRef which is then merged with
+the attributes.
+
+=head2 inflate
+
+Inflate the returned results to the appropriate document
+object. Defaults to C<1>. You can either use C<$type->inflate(0)>
+to disable this behaviour for extra speed, or you can
+use the L</raw> convenience method.
+
+
+=head2 index
+
+=head2 type
+
+=head1 METHODS
+
+=head2 all
+
+Returns all results, limited by L</size> and L</from>.
+
+=head2 first
+
+Returns the first result only. It automatically sets
+L</size> to C<1> to speed up the retrieval. However,
+it doesn't touch L</from>. In order to get the second
+result, you would do:
+
+ my $second = $type->from(2)->first;
+
+=head2 count
+
+Returns the number of results.
+
+=head2 get
+
+Get a document by its id from ElasticSearch. You can either
+pass the id as a string or you can pass a HashRef of
+the values that make up the id.
+
+=head2 put
+
+This methods builds a new document using L</new_document> and
+pushes it to the index. It returns the created document. If
+no id was supplied, the id will be fetched from ElasticSearch
+and set on the object in the C<_id> attribute.
+
+=head2 new_document
+
+Builds a new document but doesn't commit it just yet. You
+can manually commit the new document by calling
+L<ElasticSearchX::Model::Document/put> on the document
+object.
+
+=head2 raw
+
+Don't inflate returned results. This is a convenience
+method around L</inflate>.

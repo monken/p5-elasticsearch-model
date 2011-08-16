@@ -49,22 +49,21 @@ sub raw {
 
 sub _build_query {
     my $self = shift;
-    {   query => {
-            $self->filter
-            ? ( filtered => {
-                    query  => { match_all => {} },
-                    filter => $self->filter
-                }
-                )
-            : ( match_all => {} )
-
-        },
+    my $query
+        = { query => $self->query ? $self->query : { match_all => {} } };
+    $query->{filter} = $self->filter if ( $self->filter );
+    $query = { query => { filtered => $query } } unless ( $self->query );
+    my $q = {
+        %$query,
         $self->size   ? ( size   => $self->size )   : (),
         $self->from   ? ( from   => $self->from )   : (),
         $self->fields ? ( fields => $self->fields ) : (),
         $self->sort   ? ( sort   => $self->sort )   : (),
         $self->mixin ? ( %{ $self->mixin } ) : (),
     };
+    #use Data::Printer;
+    #warn p($q);
+    return $q;
 }
 
 sub put {
@@ -148,8 +147,7 @@ sub all {
 
 sub first {
     my $self  = shift;
-    my $query = $self->_build_query;
-    my @data  = $self->_build_query( { %$query, size => 1 } )->all;
+    my @data  = $self->size(1)->all;
     return undef unless (@data);
     return $data[0] if ( $self->inflate );
     return $data[0]->{hits}->{hits}->[0];
@@ -221,7 +219,6 @@ object. Defaults to C<1>. You can either use C<$type->inflate(0)>
 to disable this behaviour for extra speed, or you can
 use the L</raw> convenience method.
 
-
 =head2 index
 
 =head2 type
@@ -230,7 +227,7 @@ use the L</raw> convenience method.
 
 =head2 all
 
-Returns all results, limited by L</size> and L</from>.
+Returns all results as a list, limited by L</size> and L</from>.
 
 =head2 first
 
@@ -247,11 +244,22 @@ Returns the number of results.
 
 =head2 get
 
+ $type->get('fd_ZGWupT2KOxw3w9Q7VSA');
+ 
+ $type->get({
+     user => 'mo',
+     post_date => $dt->iso8601,
+ });
+
 Get a document by its id from ElasticSearch. You can either
 pass the id as a string or you can pass a HashRef of
 the values that make up the id.
 
 =head2 put
+
+ my $doc = $type->put({
+     message => 'hello',
+ });
 
 This methods builds a new document using L</new_document> and
 pushes it to the index. It returns the created document. If
@@ -259,6 +267,10 @@ no id was supplied, the id will be fetched from ElasticSearch
 and set on the object in the C<_id> attribute.
 
 =head2 new_document
+
+ my $doc = $type->new_document({
+      message => 'hello',
+  });
 
 Builds a new document but doesn't commit it just yet. You
 can manually commit the new document by calling

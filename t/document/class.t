@@ -3,7 +3,7 @@ use Moose;
 use ElasticSearchX::Model::Document;
 
 has some => ( is => 'ro' );
-has name => ( is => 'ro', id => 1 );
+has name => ( is => 'ro', required => 1, id => 1 );
 has more => ( is => 'ro', property => 0 );
 
 use Test::More;

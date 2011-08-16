@@ -52,7 +52,8 @@ sub _build_query {
     my $query
         = { query => $self->query ? $self->query : { match_all => {} } };
     $query->{filter} = $self->filter if ( $self->filter );
-    $query = { query => { filtered => $query } } unless ( $self->query );
+    $query = { query => { filtered => $query } }
+        if ( $self->filter && !$self->query );
     my $q = {
         %$query,
         $self->size   ? ( size   => $self->size )   : (),
@@ -61,6 +62,7 @@ sub _build_query {
         $self->sort   ? ( sort   => $self->sort )   : (),
         $self->mixin ? ( %{ $self->mixin } ) : (),
     };
+
     #use Data::Printer;
     #warn p($q);
     return $q;
@@ -146,8 +148,8 @@ sub all {
 }
 
 sub first {
-    my $self  = shift;
-    my @data  = $self->size(1)->all;
+    my $self = shift;
+    my @data = $self->size(1)->all;
     return undef unless (@data);
     return $data[0] if ( $self->inflate );
     return $data[0]->{hits}->{hits}->[0];

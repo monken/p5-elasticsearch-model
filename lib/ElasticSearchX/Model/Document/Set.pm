@@ -1,6 +1,7 @@
 package ElasticSearchX::Model::Document::Set;
 use Moose;
 use MooseX::ChainedAccessors;
+use ElasticSearchX::Model::Scroll;
 use ElasticSearchX::Model::Document::Types qw(:all);
 
 has type => ( is => 'ro', required => 1 );
@@ -63,8 +64,6 @@ sub _build_query {
         $self->mixin ? ( %{ $self->mixin } ) : (),
     };
 
-    #use Data::Printer;
-    #warn p($q);
     return $q;
 }
 
@@ -167,6 +166,14 @@ sub count {
     return $res->{hits}->{total};
 }
 
+sub scroll {
+    my ( $self, $scroll ) = @_;
+    return ElasticSearchX::Model::Scroll->new(
+        set => $self,
+        scroll => $scroll || '1m'
+    );
+}
+
 __PACKAGE__->meta->make_immutable;
 
 =head1 SYNOPSIS
@@ -175,8 +182,26 @@ __PACKAGE__->meta->make_immutable;
  my $all  = $type->all;
 
  my $result = $type->filter( { term => { message => 'hello' } } )->first;
+ 
  my $tweet
     = $type->get( { user => 'mo', post_date => DateTime->now->iso8601 } );
+
+
+ package MyModel::Tweet::Set;
+ 
+ use Moose;
+ extends 'ElasticSearchX::Model::Document::Set';
+ 
+ sub hello {
+     my $self = shift;
+     return $self->filter({
+         term => { message => 'hello' }
+     });
+ }
+ 
+ __PACKAGE__->meta->make_immutable;
+ 
+ my $result = $type->hello->first;
 
 =head1 DESCRIPTION
 
@@ -184,6 +209,12 @@ Whenever a type is accessed by calling L<ElasticSearchX::Model::Index/type>
 you will receive an instance of this class.  The instance can then be used
 to build new objects (L</new_document>), put new documents in the index
 (L</put>), do search and so on.
+
+=head1 SUBCLASSING
+
+If you define a C<::Set> class on top of your document class, this class
+will be used as set class. This allows you to put most of your business
+logic in this class.
 
 =head1 ATTRIBUTES
 

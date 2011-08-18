@@ -45,7 +45,10 @@ sub _build_types {
         grep {/^\Q$namespace\E::/} keys %stash
     );
     map { Class::MOP::load_class($_) } @found;
-    @found = grep { $_->isa('Moose::Object') } @found;
+    @found = grep {
+        $_->isa('Moose::Object')
+            && $_->does('ElasticSearchX::Model::Document::Role')
+    } @found;
     return { map { $_->meta->short_name => $_->meta } @found };
 }
 

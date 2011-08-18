@@ -14,11 +14,13 @@ Moose::Exporter->setup_import_methods(
 sub index {
     my ( $self, $name, @rest ) = @_;
     if ( !ref $name ) {
+        # DSL call, where $self is the meta object
         return $self->add_index( $name, {@rest} );
     } elsif ( ref $name eq 'ARRAY' ) {
         $self->add_index( $_, {@rest} ) for (@$name);
         return;
     } else {
+        # method call, i.e. $model->index()
         my $options = $name->meta->get_index( $rest[0] );
         my $index =
           ElasticSearchX::Model::Index->new( name => $rest[0],
@@ -66,9 +68,11 @@ __END__
 
   my $model = MyModel->new;
   $model->deploy;
-  $model->index('default')->type('tweet')->put({
+  my $tweet = $model->index('default')->type('tweet')->put({
       message => 'Hello there!'
   });
+  print $tweet->_id;
+  $tweet->delete;
 
 =head1 DESCRIPTION
 
@@ -85,13 +89,20 @@ The search API makes the tedious task of building ElasticSearch queries
 a lot easier.
 
 B<< The L<ElasticSearchX::Model::Tutorial> is probably the best place
-to start! >>
+to get started! >>
+
+B<< WARNING: This module is being used in production already but I don't
+consider it being stable in terms of the API and implementation details. >>
+
+
 
 =head1 DSL
 
 =head2 index
 
- index twitter => ( namespace => 'MyNamespace' );
+ index twitter => ( namespace => 'MyNamespace', traits => ['MyTrait'] );
+ 
+ index facebook => ( types => [qw(FB::User FB::Friends)] );
 
 Adds an index to the model. By default there is a C<default>
 index, which will be removed once you add custom indices.
@@ -145,23 +156,37 @@ Passes C<%args> directly to the L<ElasticSearch> constructor.
 
 =head2 bulk
 
-Returns an instance of L<ElasticSearchX::Model::Bulk>.
+ my $bulk = $model->bulk( size => 100 );
+ $bulk->put($tweet);
+ $bulk->commit; # optional
 
+Returns an instance of L<ElasticSearchX::Model::Bulk>.
 
 =head1 METHODS
 
 =head2 index
 
+ my $index = $model->index('twitter');
+
 Returns an L<ElasticSearchX::Model::Index> object.
 
 =head2 deploy
 
-C<deploy> will remove all indices and then insert them one
-after the other. See L</upgrade> for an upgrade routine.
+C<deploy> pushes the mapping to the ElasticSearch server. It will
+automatically try to upgrade your mapping if the types already
+exists. However, this might not be possible in case you changes
+a field from one data type to another and ElasticSearch cannot
+figure out how to translate it. In this case C<deploy> will
+throw an error message.
 
-If the index exists, ElasticSearch tries to update the mapping
-which might fail (depending on the changes to the mapping).
+To create the indices from scratch, pass C<< delete => 1 >>.
+B<< This will delete all the data in your indices. >>
 
-To create the indices from scratch, pass C<< delete => 1 >>:
+ $model->deploy( delete => 1 );
 
- $mode->deploy( delete => 1 );
+=head2 PERFORMANCE CONSIDERATIONS
+
+Creating objects is a quite expensive operation. If you are
+crawling through large amounts of data, you will gain a huge
+speed improvement by not inflating the results to their
+document classes (see L<ElasticSearchX::Model::Set/raw>).

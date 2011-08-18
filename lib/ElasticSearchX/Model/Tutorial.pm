@@ -30,7 +30,7 @@ this looks like:
  has id        => ( is => 'ro', id => [qw(user post_date)] );
  has user      => ( is => 'ro', isa => 'Str' );
  has post_date => ( is => 'ro', isa => 'DateTime' );
- has message   => ( is => 'ro', isa => 'Str' );
+ has message   => ( is => 'rw', isa => 'Str', index => 'analyzed' );
  
  package MyModel::User;
  use Moose;
@@ -147,12 +147,62 @@ If you don't really care about objects or need extra speed, you can set
 L<ElasticSearchX::Model::Documents::Set/inflate> to C<0>. This will return 
 the raw response from ElasticSearch.
 
- $twitter->type('tweet')->inflate(0)->get($tweet->id);
+ $twitter->type('tweet')->raw->get($tweet->id);
 
-=head1 SEARCHING
+=head1 SEARCHING AND SCROLLING
 
-ElasticSearch is I<You know, for Search>. TBD
+ElasticSearch is I<You know, for Search>. L<ElasticSearchX::Model::Set> tries
+to help you with its very verbose query syntax.
 
-=head1 COMPLEX EXAMPLE
+ my @tweets = $twitter->type('tweet')->filter({
+      term => { user => 'mo' }
+  })->query({
+      field => { 'message.analyzed' => 'baby' }
+  })->size(100)->all;
 
-TBD
+If you need to retrieve large amounts of data, you probably want to scroll
+through the results, which is much faster and safer than scrolling manually
+using L<ElasticSearchX::Model::Set/from>.
+
+ my $iterator = $twitter->type('tweet')->scroll;
+ while(my $tweet = $iterator->next) {
+     # do something with $tweet
+ }
+
+For extra speed use C<< $twitter->type('tweet')->raw->scroll >> which will
+skip the object inflation and give you the raw HashRef.
+
+=head1 REINDEXING
+
+ElasticSearch allows you to create aliases for each index. This makes it easy
+to reindex to a new index, and change the alias once the reindexing is done,
+to the new index. This is how you do it with ElasticSearchX::Model.
+
+ package MyModel;
+ use Moose;
+ use ElasticSearchX::Model;
+
+ index twitter => ( namespace => 'MyModel', alias_for => 'twitter_v1' );
+
+This will create an index called C<twitter_v1> in ElasticSearch and an
+alias C<twitter>. To reindex data, you simply add a second index with
+a different name but the same document classes:
+
+ index twitter_v2 => ( namespace => 'MyModel' );
+
+Now deploy the new index and start reindexing your data to the new index:
+
+ $model->deploy;
+ 
+ my $old = $model->index('twitter');
+ my $new = $model->index('twitter_v2');
+ my $iterator = $old->type('tweet')->size(1000)->scroll;
+ while(my $tweet = $iterator->next) {
+     $tweet->message('something else');
+     $tweet->index($new);
+     $tweet->put;
+ }
+ 
+ Afterwards, you simply remove the C<twitter_v2> index and set the C<alias_for>
+ attribute on index C<twitter> to C<twitter_v2>. You have to call
+ C<< $model->deploy >> again, which will automatically update the aliases.

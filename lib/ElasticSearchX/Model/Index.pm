@@ -103,6 +103,11 @@ sub refresh {
     $self->es->refresh_index( index => $self->name );
 }
 
+sub delete {
+    my $self = shift;
+    $self->es->delete_index( index => $self->name );
+}
+
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 
 __END__
@@ -184,4 +189,8 @@ Returns an instance of L<ElasticSearchX::Model::Bulk>.
 
 =head2 refresh
 
-Refresh index manually
+Refresh index manually.
+
+=head2 delete
+
+Delete an index from ElasticSearch.

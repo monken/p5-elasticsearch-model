@@ -118,7 +118,7 @@ is( $twitter->type('tweet')->filter( { term => { user => 'mo' } } )
 
 {
 
-    package MyModelReindex;
+    package MyModel::Reindex;
     use Moose;
     use ElasticSearchX::Model;
 
@@ -129,7 +129,7 @@ is( $twitter->type('tweet')->filter( { term => { user => 'mo' } } )
 {
 
     package main;
-    my $model = MyModelReindex->new( es => ':9900' );
+    my $model = MyModel::Reindex->new( es => ':9900' );
     $model->deploy( delete => 1 );
     my $old = $model->index('twitter');
     my $new = $model->index('twitter_v2');

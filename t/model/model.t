@@ -8,7 +8,7 @@ use ElasticSearchX::Model::Document;
 
 package MyModel::IRC::User;
 use Moose;
-extends 'MyModel::Twitter::User';
+BEGIN { extends 'MyModel::Twitter::User'; }
 
 package MyIndexTrait;
 use Moose::Role;

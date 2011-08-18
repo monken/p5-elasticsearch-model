@@ -2,7 +2,6 @@ package ElasticSearchX::Model::Document::Trait::Class;
 use Moose::Role;
 use List::Util ();
 use Carp;
-use Scope::Guard;
 
 has bulk_size => ( isa => 'Int', default => 10, is => 'rw' );
 has set_class => ( is => 'ro', builder => '_build_set_class', lazy => 1 );

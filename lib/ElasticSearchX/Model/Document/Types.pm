@@ -3,7 +3,7 @@ use List::MoreUtils ();
 use DateTime::Format::Epoch::Unix;
 use DateTime::Format::ISO8601;
 use ElasticSearch;
-use MooseX::Attribute::Deflator;
+use MooseX::Attribute::Deflator 2.1.7;
 use DateTime;
 use JSON;
 use Scalar::Util qw(blessed);

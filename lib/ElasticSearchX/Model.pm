@@ -190,7 +190,7 @@ B<< This will delete all the data in your indices. >>
 
  $model->deploy( delete => 1 );
 
-=head2 PERFORMANCE CONSIDERATIONS
+=head1 PERFORMANCE CONSIDERATIONS
 
 Creating objects is a quite expensive operation. If you are
 crawling through large amounts of data, you will gain a huge

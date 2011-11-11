@@ -46,7 +46,7 @@ sub get_id_attribute {
     my $self = shift;
     my ( $id, $more ) = grep { $_->id } $self->get_all_properties;
     croak "Cannot have more than one id field on a class" if ($more);
-    return $id;
+    return $id || $self->get_attribute('_id');
 }
 
 sub get_parent_attribute {

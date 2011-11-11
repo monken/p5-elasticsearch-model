@@ -29,13 +29,12 @@ sub put {
 
 sub _put {
     my ($self) = @_;
-    my $id = $self->meta->get_id_attribute;
+    my $id = $self->meta->get_id_attribute->get_value($self);
     my $parent = $self->meta->get_parent_attribute;
-
     return (
         index => $self->index->name,
         type  => $self->meta->short_name,
-        $id ? ( id => $id->get_value($self) ) : (),
+        $id ? ( id => $id ) : (),
         data => $self->meta->get_data($self),
         $parent ? ( parent => $parent->get_value($self) ) : (),
     );

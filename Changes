@@ -1,3 +1,9 @@
+0.0.4 - 2011-12-12
+  - deflate boolean values to JSON::XS::true/false
+
+0.0.3 - 2011-11-11
+  - fall back to the _id property in sub get_id_property
+
 0.0.2 - 2011-08-19
   - documentation fixes
 

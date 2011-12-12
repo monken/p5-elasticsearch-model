@@ -76,7 +76,7 @@ Moose::Util::TypeConstraints::add_parameterizable_type(
     $REGISTRY->get_type_constraint(Type) );
 
 use MooseX::Attribute::Deflator;
-deflate 'Bool', via { \( $_ ? 1 : 0 ) };
+deflate 'Bool', via { $_ ? JSON::XS::true : JSON::XS::false };
 inflate 'Bool', via { $_ ? 1 : 0 };
 my @stat
     = qw(dev ino mode nlink uid gid rdev size atime mtime ctime blksize blocks);

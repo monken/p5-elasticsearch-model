@@ -9,12 +9,13 @@ use Moose;
 use ElasticSearchX::Model::Document;
 use ElasticSearchX::Model::Document::Types qw(:all);
 
-has module => ( is => 'ro', isa => Type ['MyType'], required => 0 );
-has hash => ( is => 'ro', isa => 'HashRef', required => 0 );
+has module => ( is => 'ro', isa => Type ['MyType'] );
+has hash => ( is => 'ro', isa => 'HashRef' );
 has hash_dynamic =>
-    ( is => 'ro', isa => 'HashRef', required => 0, dynamic => 1 );
-has author => ( is => 'ro', required => 0 );
-has extra => ( is => 'ro', source_only => 1, required => 0, dynamic => 1 );
+    ( is => 'ro', isa => 'HashRef', dynamic => 1 );
+has author => ( is => 'ro' );
+has extra => ( is => 'ro', source_only => 1, dynamic => 1 );
+has [qw(bool1 bool2)] => ( is => 'ro', isa => 'Bool' );
 
 MyModel::MyClass->meta->make_immutable;
 
@@ -93,6 +94,18 @@ my $model = MyModel->new;
         { extra => { foo => 'bar' } },
         'extra field is included'
     );
+}
+
+{
+    my $doc = MyModel::MyClass->new(
+        bool1 => 1,
+        bool2 => 1,
+        index => $model->index('static')
+    );
+    my $deflated1 = $doc->meta->get_attribute('bool1')->deflate($doc);
+    ok($deflated1, "deflated is true");
+    my $deflated2 = $doc->meta->get_attribute('bool2')->deflate($doc);
+    ok($deflated2, "deflated is false");
 }
 
 done_testing;

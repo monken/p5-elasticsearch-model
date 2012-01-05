@@ -248,7 +248,7 @@ the attributes.
 =head2 inflate
 
 Inflate the returned results to the appropriate document
-object. Defaults to C<1>. You can either use C<$type->inflate(0)>
+object. Defaults to C<1>. You can either use C<< $type->inflate(0) >>
 to disable this behaviour for extra speed, or you can
 use the L</raw> convenience method.
 

@@ -1,10 +1,11 @@
 package ElasticSearchX::Model::Document::Trait::Class;
+
 # ABSTRACT: Trait that extends the meta class of a document class
 use Moose::Role;
 use List::Util ();
 use Carp;
 
-has set_class => ( is => 'ro', builder => '_build_set_class', lazy => 1 );
+has set_class  => ( is => 'ro', builder => '_build_set_class',  lazy => 1 );
 has short_name => ( is => 'ro', builder => '_build_short_name', lazy => 1 );
 has _all_properties =>
     ( is => 'ro', lazy => 1, builder => '_build_all_properties' );

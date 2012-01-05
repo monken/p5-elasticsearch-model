@@ -14,10 +14,6 @@ sub _build_set_class {
         or return 'ElasticSearchX::Model::Document::Set';
 }
 
-sub bulk_commit {
-
-}
-
 sub mapping {
     my $self  = shift;
     my $props = {
@@ -86,3 +82,8 @@ sub get_data {
 }
 
 1;
+
+=head1 ATTRIBUTES
+
+=head2 set_class
+

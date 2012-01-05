@@ -3,7 +3,6 @@ use Moose::Role;
 use List::Util ();
 use Carp;
 
-has bulk_size => ( isa => 'Int', default => 10, is => 'rw' );
 has set_class => ( is => 'ro', builder => '_build_set_class', lazy => 1 );
 has _all_properties =>
     ( is => 'ro', lazy => 1, builder => '_build_all_properties' );
@@ -73,18 +72,6 @@ sub _build_all_properties {
 sub put_mapping {
     my ( $self, $es ) = @_;
     $es->put_mapping( $self->mapping );
-}
-
-sub bulk_index {
-    my ( $self, $es, $bulk, $force ) = @_;
-    while ( @$bulk > $self->bulk_size || $force ) {
-        my @step = splice( @$bulk, 0, $self->bulk_size );
-        my @data = map { { create => { $_->_index } } }
-            map { $self->name->new(%$_) } @step;
-
-        $es->bulk(@data);
-        undef $force unless (@$bulk);
-    }
 }
 
 sub get_data {

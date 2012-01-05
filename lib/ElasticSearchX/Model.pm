@@ -195,4 +195,4 @@ B<< This will delete all the data in your indices. >>
 Creating objects is a quite expensive operation. If you are
 crawling through large amounts of data, you will gain a huge
 speed improvement by not inflating the results to their
-document classes (see L<ElasticSearchX::Model::Set/raw>).
+document classes (see L<ElasticSearchX::Model::Document::Set/raw>).

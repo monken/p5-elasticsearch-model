@@ -1,4 +1,6 @@
 package ElasticSearchX::Model::Document::Set;
+
+# ABSTRACT: Represents a query used for fetching a set of results
 use Moose;
 use MooseX::ChainedAccessors;
 use ElasticSearchX::Model::Scroll;
@@ -97,7 +99,7 @@ sub inflate_result {
 }
 
 sub get {
-    my ( $self, $args ) = @_;
+    my ( $self, $args, $qs ) = @_;
     my ($id);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
 
@@ -120,13 +122,14 @@ sub get {
         );
     }
 
-    my $res = eval {
-        $self->es->transport->request(
-            {   method => 'GET',
-                cmd    => "/$index/$type/$id"
-            }
-        );
-    };
+    my $res = $self->es->get(
+        index => $index,
+        type  => $type,
+        id    => $id,
+        $self->fields ? ( fields => $self->fields ) : (),
+        ignore_missing => 1,
+        %{ $qs || {} },
+    );
     return undef unless ($res);
     return $self->inflate ? $self->inflate_result($res) : $res;
 }
@@ -276,6 +279,8 @@ result, you would do:
 Returns the number of results.
 
 =head2 get
+
+=head2 get( { %qs } )
 
  $type->get('fd_ZGWupT2KOxw3w9Q7VSA');
  

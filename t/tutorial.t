@@ -1,17 +1,10 @@
 use lib qw(t/lib);
 use MyModel;
 use Test::Most;
-use IO::Socket::INET;
-
-unless ( IO::Socket::INET->new('127.0.0.1:9900') ) {
-    plan skip_all => 'Requires an ElasticSearch server running on port 9900';
-}
-
-my $model = MyModel->new( es => ':9900' );
-ok( $model->deploy( delete => 1 ), 'Deploy ok' );
-
 use DateTime;
 
+
+my $model = MyModel->testing;
 my $twitter   = $model->index('twitter');
 my $timestamp = DateTime->now;
 ok( my $tweet = $twitter->type('tweet')->put(

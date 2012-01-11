@@ -12,21 +12,21 @@ has es => ( is => 'ro' );
 
 sub update {
     my ( $self, $doc, $qs ) = @_;
-    $self->add( { index => { $doc->_put( $doc->_update($qs) ) } } );
+    $self->add( { index => ref $doc eq 'HASH' ? $doc : { $doc->_put( $doc->_update($qs) ) } } );
     $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
 
 sub create {
     my ( $self, $doc, $qs ) = @_;
-    $self->add( { create => { $doc->_put($qs) } } );
+    $self->add( { create => ref $doc eq 'HASH' ? $doc : { $doc->_put($qs) } } );
     $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
 
 sub put {
     my ( $self, $doc, $qs ) = @_;
-    $self->add( { index => { $doc->_put, %{ $qs || {} } } } );
+    $self->add( { index => ref $doc eq 'HASH' ? $doc : { $doc->_put, %{ $qs || {} } } } );
     $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
@@ -117,7 +117,8 @@ The L<ElasticSearch> object.
 =head2 put( $doc, { %qs } )
 
 Put a document. Accepts a document object (see 
-L<ElasticSearchX::Model::Document::Set/new_document>).
+L<ElasticSearchX::Model::Document::Set/new_document>) or a
+HashRef for better performance.
 
 =head2 delete
 

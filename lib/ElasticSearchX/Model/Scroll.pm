@@ -23,6 +23,11 @@ has _scrolled_search => (
     }
 );
 
+has qs => (
+    is  => 'ro',
+    isa => 'HashRef',
+);
+
 sub _build__scrolled_search {
     my $self = shift;
     ElasticSearch::ScrolledSearch->new(
@@ -30,7 +35,8 @@ sub _build__scrolled_search {
         {   %{ $self->set->_build_query },
             scroll => $self->scroll,
             index  => $self->index->name,
-            type   => $self->type->short_name
+            type   => $self->type->short_name,
+            %{ $self->qs || {} },
         }
     );
 }

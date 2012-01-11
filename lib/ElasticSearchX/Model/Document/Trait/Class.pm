@@ -54,6 +54,10 @@ sub get_parent_attribute {
     return $id;
 }
 
+sub get_version_attribute {
+    shift->get_attribute('_version');
+}
+
 sub get_all_properties {
     my $self = shift;
     return @{ $self->_all_properties }

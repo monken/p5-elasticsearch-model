@@ -10,15 +10,29 @@ has stash => (
 has size => ( is => 'ro', isa => 'Int', default => 100 );
 has es => ( is => 'ro' );
 
+sub update {
+    my ( $self, $doc, $qs ) = @_;
+    $self->add( { index => { $doc->_put( $doc->_update($qs) ) } } );
+    $self->commit if ( $self->stash_size > $self->size );
+    return $self;
+}
+
+sub create {
+    my ( $self, $doc, $qs ) = @_;
+    $self->add( { create => { $doc->_put($qs) } } );
+    $self->commit if ( $self->stash_size > $self->size );
+    return $self;
+}
+
 sub put {
-    my ( $self, $doc ) = @_;
-    $self->add( { index => { $doc->_put } } );
+    my ( $self, $doc, $qs ) = @_;
+    $self->add( { index => { $doc->_put, %{ $qs || {} } } } );
     $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
 
 sub delete {
-    my ( $self, $doc ) = @_;
+    my ( $self, $doc, $qs ) = @_;
     $self->add(
         {   delete => ref $doc eq 'HASH'
             ? $doc
@@ -34,7 +48,7 @@ sub delete {
 
 sub commit {
     my $self = shift;
-    return unless($self->stash_size);
+    return unless ( $self->stash_size );
     my $result = $self->es->bulk( $self->stash );
     $self->clear;
     return $result;
@@ -42,8 +56,8 @@ sub commit {
 
 sub clear {
     my $self = shift;
-    @{$self->stash} = ();
-    return $self;    
+    @{ $self->stash } = ();
+    return $self;
 }
 
 sub DEMOLISH {
@@ -94,7 +108,13 @@ The L<ElasticSearch> object.
 
 =head1 METHODS
 
-=head2 put
+=head2 create
+
+=head2 update
+
+=head2 put( $doc )
+
+=head2 put( $doc, { %qs } )
 
 Put a document. Accepts a document object (see 
 L<ElasticSearchX::Model::Document::Set/new_document>).

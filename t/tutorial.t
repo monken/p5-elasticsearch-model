@@ -1,8 +1,9 @@
+use strict;
+use warnings;
 use lib qw(t/lib);
 use MyModel;
 use Test::Most;
 use DateTime;
-
 
 my $model = MyModel->testing;
 my $twitter   = $model->index('twitter');

@@ -16,20 +16,56 @@ has index => (
     is  => 'rw'
 );
 
-has _id => ( is => 'ro' );
+has _id      => ( is => 'ro' );
+has _version => ( is => 'ro' );
+
+sub update {
+    my $self = shift;
+    return $self->put( { $self->_update(@_) } );
+}
+
+sub _update {
+    my ( $self, $qs ) = @_;
+    $qs ||= {};
+    return %$qs if ( exists $qs->{version} );
+    my $version = $self->_version;
+    die "cannot update document without a version"
+        unless ($version);
+    return (
+        version => $version,
+        %$qs
+    );
+}
+
+sub create {
+    my $self = shift;
+    return $self->put( { $self->_create(@_) } );
+}
+
+sub _create {
+    my ( $self, $qs ) = @_;
+    my $version = $self->_version;
+    return (
+        create => 1,
+        %{ $qs || {} }
+
+    );
+}
 
 sub put {
     my ( $self, $qs ) = @_;
+    my $return = $self->index->model->es->index( $self->_put($qs) );
     my $id     = $self->meta->get_id_attribute;
-    my $return = $self->index->model->es->index( $self->_put, %$qs );
     $id->set_value( $self, $return->{_id} ) if ($id);
     $self->meta->get_attribute('_id')->set_value( $self, $return->{_id} );
+    $self->meta->get_attribute('_version')
+        ->set_value( $self, $return->{_version} );
     return $self;
 }
 
 sub _put {
-    my ($self) = @_;
-    my $id = $self->meta->get_id_attribute->get_value($self);
+    my ( $self, $qs ) = @_;
+    my $id     = $self->meta->get_id_attribute->get_value($self);
     my $parent = $self->meta->get_parent_attribute;
     return (
         index => $self->index->name,
@@ -37,6 +73,7 @@ sub _put {
         $id ? ( id => $id ) : (),
         data => $self->meta->get_data($self),
         $parent ? ( parent => $parent->get_value($self) ) : (),
+        %{ $qs || {} },
     );
 }
 

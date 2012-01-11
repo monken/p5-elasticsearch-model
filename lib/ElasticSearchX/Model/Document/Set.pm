@@ -31,12 +31,6 @@ has [qw(fields sort)] => (
 
 sub add_sort { push( @{ $_[0]->sort }, $_[1] ); return $_[0]; }
 
-has fields => (
-    isa    => 'ArrayRef',
-    is     => 'rw',
-    traits => [qw(Chained)]
-);
-
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
 
 has query_type => ( isa => QueryType, is => 'rw', traits => [qw(Chained)] );
@@ -90,8 +84,9 @@ sub inflate_result {
     my $parent = $type->get_parent_attribute;
     return $type->new_object(
         {   %{ $res->{_source} || {} },
-            index => $index,
-            _id   => $res->{_id},
+            index    => $index,
+            _id      => $res->{_id},
+            _version => $res->{_version},
             $id     ? ( $id->name     => $res->{_id} )     : (),
             $parent ? ( $parent->name => $res->{_parent} ) : (),
         }
@@ -135,13 +130,13 @@ sub get {
 }
 
 sub all {
-    my $self = shift;
+    my ( $self, $qs ) = @_;
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
     my $res = $self->es->transport->request(
         {   method => 'POST',
             cmd    => "/$index/$type/_search",
             data   => $self->_build_query,
-            qs     => { version => 1 }
+            qs     => { version => 1, %{ $qs || {} } },
         }
     );
     return $res unless ( $self->inflate );
@@ -150,8 +145,8 @@ sub all {
 }
 
 sub first {
-    my $self = shift;
-    my @data = $self->size(1)->all;
+    my ( $self, $qs ) = @_;
+    my @data = $self->size(1)->all($qs);
     return undef unless (@data);
     return $data[0] if ( $self->inflate );
     return $data[0]->{hits}->{hits}->[0];
@@ -169,11 +164,23 @@ sub count {
     return $res->{hits}->{total};
 }
 
+sub delete {
+    my ( $self, $qs ) = @_;
+    my $query = $self->_build_query;
+    return $self->es->delete_by_query(
+        index => $self->index->name,
+        type  => $self->type->short_name,
+        query => $query->{filter} ? { filtered => $query } : $query->{query},
+        %{ $qs || {} },
+    );
+}
+
 sub scroll {
-    my ( $self, $scroll ) = @_;
+    my ( $self, $scroll, $qs ) = @_;
     return ElasticSearchX::Model::Scroll->new(
         set => $self,
-        scroll => $scroll || '1m'
+        scroll => $scroll || '1m',
+        qs => { version => 1, %{ $qs || {} } },
     );
 }
 
@@ -263,9 +270,31 @@ use the L</raw> convenience method.
 
 =head2 all
 
+=head2 all( { %qs } )
+
 Returns all results as a list, limited by L</size> and L</from>.
 
+=head2 scroll
+
+=head2 scroll( $scroll, { %qs } )
+
+ my $iterator = $twitter->type('tweet')->scroll;
+ while ( my $tweet = $iterator->next ) {
+     # do something
+ }
+
+Large results should be scrolled thorugh using this iterator.
+It will return an instance of L<ElasticSearchX::Model::Scroll>.
+The C<$scroll> parameter is a time value parameter (for example: C<5m>),
+indicating for how long the nodes that participate in the search will
+maintain relevant resources in order to continue and support it.
+C<$scroll> defaults to C<1m>.
+
+Scrolling is executed by pulling in L</size> number of documents.
+
 =head2 first
+
+=head2 first( { %qs } )
 
 Returns the first result only. It automatically sets
 L</size> to C<1> to speed up the retrieval. However,
@@ -277,6 +306,13 @@ result, you would do:
 =head2 count
 
 Returns the number of results.
+
+=head2 delete
+
+=head2 delete( { %qs } )
+
+Delete all documents that match the query. Issues a call to
+L<ElasticSearch/delete_by_query()>.
 
 =head2 get
 
@@ -294,6 +330,8 @@ pass the id as a string or you can pass a HashRef of
 the values that make up the id.
 
 =head2 put
+
+=head2 put( { %qs } )
 
  my $doc = $type->put({
      message => 'hello',

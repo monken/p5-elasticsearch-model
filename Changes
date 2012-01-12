@@ -1,3 +1,11 @@
+0.0.5 - 2012-01-11
+  - documentation
+  - pass-through query parameters for most methods (e.g. get, put, all)
+  - delete method on a Set which will issue a delete_by_query
+  - default to fetch the _version on search
+  - introduce create and update methods on a document
+  - bulk actions accept raw hashrefs for better performance
+
 0.0.4 - 2011-12-12
   - deflate boolean values to JSON::XS::true/false
 

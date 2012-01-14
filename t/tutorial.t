@@ -54,8 +54,9 @@ my $raw = {
     _type    => "tweet",
     _version => 1
 };
+$tweets = $tweets->raw;
 is_deeply(
-    $tweets->inflate(0)->get( $tweet->id ),
+    $tweets->get( $tweet->id ),
     { %$raw, exists => 'true' },
     'Raw response'
 );

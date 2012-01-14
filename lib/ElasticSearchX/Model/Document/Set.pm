@@ -2,7 +2,8 @@ package ElasticSearchX::Model::Document::Set;
 
 # ABSTRACT: Represents a query used for fetching a set of results
 use Moose;
-use MooseX::ChainedAccessors;
+use MooseX::Attribute::Chained;
+use MooseX::Attribute::ChainedClone;
 use ElasticSearchX::Model::Scroll;
 use ElasticSearchX::Model::Document::Types qw(:all);
 
@@ -12,33 +13,33 @@ has index => ( is => 'ro', required => 1, handles => [qw(es model)] );
 has query => (
     isa    => 'HashRef',
     is     => 'rw',
-    traits => [qw(Chained)]
+    traits => [qw(ChainedClone)]
 );
 
 has filter => (
     isa    => 'HashRef',
     is     => 'rw',
-    traits => [qw(Chained)]
+    traits => [qw(ChainedClone)]
 );
 
-has [qw(from size)] => ( isa => 'Int', is => 'rw', traits => [qw(Chained)] );
+has [qw(from size)] => ( isa => 'Int', is => 'rw', traits => [qw(ChainedClone)] );
 
 has [qw(fields sort)] => (
     isa    => 'ArrayRef',
     is     => 'rw',
-    traits => [qw(Chained)]
+    traits => [qw(ChainedClone)]
 );
 
 sub add_sort { push( @{ $_[0]->sort }, $_[1] ); return $_[0]; }
 
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
 
-has query_type => ( isa => QueryType, is => 'rw', traits => [qw(Chained)] );
+has query_type => ( isa => QueryType, is => 'rw', traits => [qw(ChainedClone)] );
 
-has mixin => ( is => 'ro', isa => 'HashRef', traits => [qw(Chained)] );
+has mixin => ( is => 'ro', isa => 'HashRef', traits => [qw(ChainedClone)] );
 
 has inflate =>
-    ( isa => 'Bool', default => 1, is => 'rw', traits => [qw(Chained)] );
+    ( isa => 'Bool', default => 1, is => 'rw', traits => [qw(ChainedClone)] );
 
 sub raw {
     shift->inflate(0);
@@ -228,8 +229,21 @@ logic in this class.
 
 =head1 ATTRIBUTES
 
-All attributes can be chained, i.e. all of them return the
-object and not the value that was passed to it.
+All attributes have the L<MooseX::Attribute::ChainedClone> trait applied.
+That means that you can chain calls to these attributes and that a cloned
+instance is returned whenever you set an attribute. This pattern is inspired
+by L<DBIx::Class::ResultSet/search>.
+
+ my $type = $model->index('default')->type('tweet');
+ my @documents = $type->fields(['user'])->all;
+ # $type->fields has not been touched, instead a cloned instance of $type
+ # has been created with "fields" set to ['user']
+
+ $type = $type->fields(['user']);
+ # this will set $type to a cloned instance of $type with fields
+ # set to ['user']
+ @documents = $type->all;
+ # same result as above
 
 =head2 filter
 

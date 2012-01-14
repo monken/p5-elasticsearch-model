@@ -1,3 +1,13 @@
+0.1.0 - 2012-01-14
+  - BREAKING CHANGE:
+    attributes on the Set class will now clone the Set instance.
+    This might break your code if you rely on the fact, that an attribute
+    from a previous call changes the underlying Set instance.
+    Example:
+    my @documents = $type->inflate(0)->all;
+    # this won't set the inflate attribute to 0 on the $type instance
+    # instead a clone of $type is created with inflate set to 0
+
 0.0.5 - 2012-01-11
   - documentation
   - pass-through query parameters for most methods (e.g. get, put, all)

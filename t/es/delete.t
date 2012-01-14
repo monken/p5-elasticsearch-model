@@ -29,8 +29,8 @@ is( $twitter->count, 15, '15 created' );
 
 ok( $twitter->filter( { term => { name => 'mo' } } )->delete, 'run delete' );
 
-is( $twitter->count, 0, 'none remain' );
+is( $twitter->filter( { term => { name => 'mo' } } )->count, 0, 'none remain' );
 
-is( $twitter->index->type('user')->count, 5, '5 remain' );
+is( $twitter->count, 5, '5 remain' );
 
 done_testing;

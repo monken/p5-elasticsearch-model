@@ -76,7 +76,10 @@ sub get_data {
     my ( $self, $instance ) = @_;
     return {
         map {
-            my $deflate = $_->deflate($instance);
+            my $deflate
+                = $_->is_inflated($instance)
+                ? $_->deflate($instance)
+                : $_->get_raw_value($instance);
             defined $deflate ? ( $_->name => $deflate ) : ();
             } grep { $_->has_value($instance) || $_->is_required }
             $self->get_all_properties

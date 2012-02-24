@@ -73,7 +73,7 @@ sub put {
 
 sub new_document {
     my ( $self, $args ) = @_;
-    return $self->type->new_object( %$args, index => $self->index );
+    return $self->type->name->new( %$args, index => $self->index );
 }
 
 sub inflate_result {
@@ -83,7 +83,7 @@ sub inflate_result {
     $type  = $type  ? $index->get_type($type)     : $self->type;
     my $id     = $type->get_id_attribute;
     my $parent = $type->get_parent_attribute;
-    return $type->new_object(
+    return $type->name->new(
         {   %{ $res->{_source} || {} },
             index    => $index,
             _id      => $res->{_id},

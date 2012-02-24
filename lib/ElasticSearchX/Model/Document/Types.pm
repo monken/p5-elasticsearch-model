@@ -3,7 +3,8 @@ use List::MoreUtils ();
 use DateTime::Format::Epoch::Unix;
 use DateTime::Format::ISO8601;
 use ElasticSearch;
-use MooseX::Attribute::Deflator 2.1.7;
+use MooseX::Attribute::Deflator;
+use MooseX::Attribute::Deflator::Moose;
 use DateTime;
 use JSON;
 use Scalar::Util qw(blessed);
@@ -16,7 +17,8 @@ use MooseX::Types -declare => [
         )
 ];
 
-use Sub::Exporter -setup => { exports => [qw(Location QueryType ES Type Types)] };
+use Sub::Exporter -setup =>
+    { exports => [qw(Location QueryType ES Type Types)] };
 
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef/;
 use MooseX::Types::Structured qw(Dict Tuple Optional);
@@ -49,10 +51,9 @@ coerce Types, from ArrayRef ['Str'], via {
     my $array = $_;
     return {
         map {
-            my $meta = Class::MOP::Class->initialize( $_ );
+            my $meta = Class::MOP::Class->initialize($_);
             $meta->short_name => $meta
-            }
-            @$array
+            } @$array
     };
 };
 
@@ -76,27 +77,40 @@ Moose::Util::TypeConstraints::add_parameterizable_type(
     $REGISTRY->get_type_constraint(Type) );
 
 use MooseX::Attribute::Deflator;
-deflate 'Bool', via { $_ ? JSON::XS::true : JSON::XS::false };
-inflate 'Bool', via { $_ ? 1 : 0 };
 my @stat
     = qw(dev ino mode nlink uid gid rdev size atime mtime ctime blksize blocks);
-deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } };
-deflate 'ScalarRef', via { ref $_         ? $$_ : $_ };
-deflate 'HashRef',   via { shift->dynamic ? $_  : encode_json($_) };
-inflate 'HashRef',   via { shift->dynamic ? $_  : decode_json($_) };
-deflate 'DateTime',  via { $_->iso8601 };
-inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime($_) };
-deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] };
-deflate Type . '[]', via { ref $_ eq 'HASH' ? $_ : $_->meta->get_data($_) };
-deflate 'ArrayRef[]', via {
-    my ( $attr, $constraint, $deflate ) = @_;
-    return $_ if ( $attr->dynamic );
-    $constraint = $constraint->parent
-        if ( ref $constraint eq 'MooseX::Types::TypeDecorator' );
-    my $value = [@$_];
-    $_ = $deflate->( $_, $constraint->type_parameter ) for (@$value);
-    return $deflate->( $value, $constraint->parent );
-};
+deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } },
+    inline_as {
+    join( "\n",
+        'my @stat = qw(dev ino mode nlink uid gid',
+        'rdev size atime mtime ctime blksize blocks);',
+        'List::MoreUtils::mesh( @stat, @$value )',
+    );
+    };
+deflate [ 'ArrayRef', 'HashRef' ],
+    via { shift->dynamic ? $_ : encode_json($_) }, inline_as {
+    return '$value' if ( $_[0]->dynamic );
+    return 'JSON::XS::encode_json($value)';
+    };
+inflate [ 'ArrayRef', 'HashRef' ],
+    via { shift->dynamic ? $_ : decode_json($_) }, inline_as {
+    return '$value' if ( $_[0]->dynamic );
+    return 'JSON::XS::decode_json($value)';
+    };
+
+deflate 'ArrayRef', via {$_}, inline_as {'$value'};
+inflate 'ArrayRef', via {$_}, inline_as {'$value'};
+
+deflate 'DateTime', via { $_->iso8601 }, inline_as {'$value->iso8601'};
+inflate 'DateTime', via { DateTime::Format::ISO8601->parse_datetime($_) },
+    inline_as {'DateTime::Format::ISO8601->parse_datetime($value)'};
+deflate Location, via { [ $_->[0] + 0, $_->[1] + 0 ] },
+    inline_as {'[ $value->[0] + 0, $value->[1] + 0 ]'};
+deflate Type . '[]', via { ref $_ eq 'HASH' ? $_ : $_->meta->get_data($_) },
+    inline_as {
+    'ref $value eq "HASH" ? $value : $value->meta->get_data($value)';
+    };
+
 no MooseX::Attribute::Deflator;
 
 1;

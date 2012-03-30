@@ -4,6 +4,7 @@ package ElasticSearchX::Model::Document::Trait::Class;
 use Moose::Role;
 use List::Util ();
 use Carp;
+use Eval::Closure;
 
 has set_class  => ( is => 'ro', builder => '_build_set_class',  lazy => 1 );
 has short_name => ( is => 'ro', builder => '_build_short_name', lazy => 1 );
@@ -74,10 +75,13 @@ sub _build_all_properties {
 
 sub get_data {
     my ( $self, $instance ) = @_;
+    return $self->name->_get_data($instance)
+        if ( $self->has_method('_get_data') );
     return {
         map {
             my $deflate
                 = $_->is_inflated($instance)
+                || $_->is_required && !$_->has_value($instance)
                 ? $_->deflate($instance)
                 : $_->get_raw_value($instance);
             defined $deflate ? ( $_->name => $deflate ) : ();
@@ -85,6 +89,59 @@ sub get_data {
             $self->get_all_properties
     };
 }
+
+sub _inline_get_data {
+    my $self = shift;
+    my @code = ( 'sub {', 'my $data = {};' );
+    my @type_constraints, my @type_coercions;
+    my $i = 0;
+    foreach my $property ( $self->get_all_properties ) {
+        push( @type_constraints,
+              $property->has_type_constraint
+            ? $property->type_constraint->_compiled_type_constraint
+            : undef );
+        push( @type_coercions,
+              $property->type_constraint
+            ? $property->type_constraint->has_coercion
+                    ? $property->type_constraint->coercion
+                    ->_compiled_type_coercion
+                    : undef
+            : undef );
+        my $has_value   = $property->_inline_instance_has('$_[1]');
+        my @is_inflated = $property->_inline_instance_is_inflated(
+            '$_[1]',
+            '$type_constraints[' . $i . ']',
+            '$type_coercions[' . $i . ']',
+        );
+        my @get_raw_value = $property->_inline_instance_get('$_[1]');
+        push( @code, "if($has_value)" ) unless ( $property->is_required );
+        push( @code,
+            '{',
+            '$data->{"' . quotemeta( $property->name ) . '"} = (',
+            @is_inflated,
+            $property->is_required ? " || !$has_value" : "",
+            ') ? $properties[' . $i . ']->deflate($_[1]) : ',
+            @get_raw_value,
+            ';',
+            'delete $data->{"' . quotemeta( $property->name ) . '"}',
+            '  unless(defined $data->{"'
+                . quotemeta( $property->name ) . '"});',
+            '}' );
+        $i++;
+    }
+    @code = join( "\n", @code, 'return $data;', '}' );
+    my $evaled = eval_closure(
+        environment => {
+            '@type_coercions'   => \@type_coercions,
+            '@type_constraints' => \@type_constraints,
+            '@properties'       => [ $self->get_all_properties ],
+        },
+        source => @code,
+    );
+    $self->add_method( _get_data => $evaled );
+}
+
+before make_immutable => \&_inline_get_data if ( $Moose::VERSION >= 2 );
 
 1;
 

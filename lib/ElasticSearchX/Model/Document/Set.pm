@@ -57,8 +57,10 @@ sub refresh {
 sub _build_qs {
     my ( $self, $qs ) = @_;
     $qs ||= {};
+
     # we only want to set qs if they are not the default
-    $qs->{refresh} = 1 if($self->_refresh);
+    $qs->{refresh} = 1 if ( $self->_refresh );
+    $qs->{query_type} = $self->query_type if ( $self->query_type );
     return $qs;
 }
 

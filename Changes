@@ -1,3 +1,7 @@
+0.1.1 - 2012-03-30
+  - $type->refresh sets the refresh qs to a true value
+  
+
 0.1.0 - 2012-01-14
   - BREAKING CHANGE:
     attributes on the Set class will now clone the Set instance.

@@ -22,7 +22,8 @@ has filter => (
     traits => [qw(ChainedClone)]
 );
 
-has [qw(from size)] => ( isa => 'Int', is => 'rw', traits => [qw(ChainedClone)] );
+has [qw(from size)] =>
+    ( isa => 'Int', is => 'rw', traits => [qw(ChainedClone)] );
 
 has [qw(fields sort)] => (
     isa    => 'ArrayRef',
@@ -34,7 +35,8 @@ sub add_sort { push( @{ $_[0]->sort }, $_[1] ); return $_[0]; }
 
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
 
-has query_type => ( isa => QueryType, is => 'rw', traits => [qw(ChainedClone)] );
+has query_type =>
+    ( isa => QueryType, is => 'rw', traits => [qw(ChainedClone)] );
 
 has mixin => ( is => 'ro', isa => 'HashRef', traits => [qw(ChainedClone)] );
 
@@ -43,6 +45,21 @@ has inflate =>
 
 sub raw {
     shift->inflate(0);
+}
+
+has _refresh =>
+    ( isa => 'Bool', default => 0, is => 'rw', traits => [qw(ChainedClone)] );
+
+sub refresh {
+    shift->_refresh(1);
+}
+
+sub _build_qs {
+    my ( $self, $qs ) = @_;
+    $qs ||= {};
+    # we only want to set qs if they are not the default
+    $qs->{refresh} = 1 if($self->_refresh);
+    return $qs;
 }
 
 sub _build_query {
@@ -67,7 +84,7 @@ sub _build_query {
 sub put {
     my ( $self, $args, $qs ) = @_;
     my $doc = $self->new_document($args);
-    $doc->put($qs);
+    $doc->put( $self->_build_qs($qs) );
     return $doc;
 }
 
@@ -96,6 +113,7 @@ sub inflate_result {
 
 sub get {
     my ( $self, $args, $qs ) = @_;
+    $qs = $self->_build_qs($qs);
     my ($id);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
 
@@ -132,6 +150,7 @@ sub get {
 
 sub all {
     my ( $self, $qs ) = @_;
+    $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
     my $res = $self->es->transport->request(
         {   method => 'POST',
@@ -147,6 +166,7 @@ sub all {
 
 sub first {
     my ( $self, $qs ) = @_;
+    $qs = $self->_build_qs($qs);
     my @data = $self->size(1)->all($qs);
     return undef unless (@data);
     return $data[0] if ( $self->inflate );
@@ -154,12 +174,14 @@ sub first {
 }
 
 sub count {
-    my $self = shift;
+    my ( $self, $qs ) = @_;
+    $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
     my $res = $self->es->transport->request(
         {   method => 'POST',
             cmd    => "/$index/$type/_search",
             data   => { %{ $self->_build_query }, size => 0 },
+            qs     => $qs,
         }
     );
     return $res->{hits}->{total};
@@ -167,12 +189,13 @@ sub count {
 
 sub delete {
     my ( $self, $qs ) = @_;
+    $qs = $self->_build_qs($qs);
     my $query = $self->_build_query;
     return $self->es->delete_by_query(
         index => $self->index->name,
         type  => $self->type->short_name,
         query => $query->{filter} ? { filtered => $query } : $query->{query},
-        %{ $qs || {} },
+        %$qs,
     );
 }
 
@@ -181,7 +204,7 @@ sub scroll {
     return ElasticSearchX::Model::Scroll->new(
         set => $self,
         scroll => $scroll || '1m',
-        qs => { version => 1, %{ $qs || {} } },
+        qs => $self->_build_qs( { version => 1, %{ $qs || {} } } ),
     );
 }
 
@@ -371,3 +394,9 @@ object.
 
 Don't inflate returned results. This is a convenience
 method around L</inflate>.
+
+=head2 refresh
+
+This will add the C<refresh> query parameter to all requests.
+
+  $users->refresh->put( { nickname => 'mo' } );

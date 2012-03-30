@@ -14,7 +14,7 @@ sub testing {
 
     my $model = $class->new( es => ':9900' );
     ok( $model->deploy( delete => 1 ), 'Deploy ok' );
-    $model->es->trace_calls(1);
+    # $model->es->trace_calls(1);
     return $model;
 }
 

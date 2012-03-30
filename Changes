@@ -1,6 +1,6 @@
 0.1.1 - 2012-03-30
   - $type->refresh sets the refresh qs to a true value
-  
+  - query_type attribute
 
 0.1.0 - 2012-01-14
   - BREAKING CHANGE:

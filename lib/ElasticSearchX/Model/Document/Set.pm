@@ -285,6 +285,8 @@ build a C<filtered> query, which performs far better.
 
 =head2 sort
 
+=head2 query_type
+
 These attributes are passed directly to the ElasticSearch search request.
 
 =head2 mixin

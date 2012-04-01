@@ -102,13 +102,15 @@ sub inflate_result {
     $type  = $type  ? $index->get_type($type)     : $self->type;
     my $id     = $type->get_id_attribute;
     my $parent = $type->get_parent_attribute;
+    my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
     return $type->name->new(
-        {   %{ $res->{_source} || {} },
+        {   %$fields,
             index    => $index,
             _id      => $res->{_id},
             _version => $res->{_version},
-            $id     ? ( $id->name     => $res->{_id} )     : (),
-            $parent ? ( $parent->name => $res->{_parent} ) : (),
+            $fields->{_timestamp} ? ( timestamp     => $fields->{_timestamp} ) : (),
+            $id                ? ( $id->name     => $res->{_id} )        : (),
+            $parent            ? ( $parent->name => $res->{_parent} )    : (),
         }
     );
 }

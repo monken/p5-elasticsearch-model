@@ -10,9 +10,12 @@ is_deeply( Location->coerce( { latitude => 12, longitude => 13 } ),
     [ 13, 12 ] );
 
 my $dt = find_type_constraint('DateTime');
-is( $dt->coerce(10)->iso8601,                    '1970-01-01T00:00:10' );
+is( $dt->coerce(10000)->iso8601,                 '1970-01-01T00:00:10' );
 is( $dt->coerce('1970-01-01T00:00:20')->iso8601, '1970-01-01T00:00:20' );
 is( $dt->coerce('1970-01-01')->iso8601,          '1970-01-01T00:00:00' );
+
+ok( find_type_constraint(TTLField)->check( { enabled => 1, foo => 'bar' } ),
+    'test TTLField' );
 
 {
 

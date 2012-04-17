@@ -15,8 +15,8 @@ ok( $twitter->refresh->put(
     'Put mo ok'
 );
 
-ok( my $user = $twitter->query_type('scan')->fields( ['nickname'] )->first, 'get name field' );
+ok( my $user = $twitter->query_type('scan')->fields( ['name'] )->first, 'get name field' );
 
-is($user->nickname, 'mo', 'got field ok');
+is($user->name, 'Moritz Onken', 'got field ok');
 
 done_testing;

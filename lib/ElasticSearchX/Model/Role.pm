@@ -44,20 +44,17 @@ sub deploy {
             );
         }
         if ( my $alias = $index->alias_for ) {
-            my $aliases
-                = $self->es->get_aliases( index => $index->name )->{aliases}
-                ->{ $index->name };
+            my @aliases
+                = keys %{ $self->es->get_aliases( index => $index->name )
+                    || {} };
             my $actions = [
                 (   map {
-                        { remove => { index => $_, alias => $index->name }
-                        }
-                        } @$aliases
+                        { remove => { index => $_, alias => $index->name } }
+                        } @aliases
                 ),
                 { add => { index => $alias, alias => $index->name } }
             ];
-            $self->es->aliases(
-                actions => $actions
-            );
+            $self->es->aliases( actions => $actions );
         }
     }
     return 1;

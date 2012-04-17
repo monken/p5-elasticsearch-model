@@ -16,8 +16,24 @@ has index => (
     is  => 'rw'
 );
 
-has _id      => ( is => 'ro' );
-has _version => ( is => 'ro' );
+has _id => (
+    is          => 'ro',
+    property    => 0,
+    source_only => 1,
+    traits      => [
+        'ElasticSearchX::Model::Document::Trait::Attribute',
+        'ElasticSearchX::Model::Document::Trait::Field::ID',
+    ],
+);
+has _version => (
+    is          => 'ro',
+    property    => 0,
+    source_only => 1,
+    traits      => [
+        'ElasticSearchX::Model::Document::Trait::Attribute',
+        'ElasticSearchX::Model::Document::Trait::Field::Version',
+    ],
+);
 
 sub update {
     my $self = shift;
@@ -67,13 +83,15 @@ sub _put {
     my ( $self, $qs ) = @_;
     my $id     = $self->meta->get_id_attribute->get_value($self);
     my $parent = $self->meta->get_parent_attribute;
+    my $data   = $self->meta->get_data($self);
+    $qs = { %{ $self->meta->get_query_data($self) }, %{ $qs || {} } };
     return (
         index => $self->index->name,
         type  => $self->meta->short_name,
         $id ? ( id => $id ) : (),
-        data => $self->meta->get_data($self),
+        data => $data,
         $parent ? ( parent => $parent->get_value($self) ) : (),
-        %{ $qs || {} },
+        %$qs,
     );
 }
 
@@ -84,7 +102,7 @@ sub delete {
         index => $self->index->name,
         type  => $self->meta->short_name,
         id    => $self->_id,
-        %$qs
+        %{ $qs || {} },
     );
     return $self;
 }

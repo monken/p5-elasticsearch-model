@@ -57,7 +57,7 @@ my $meta = MyClass->meta;
 
 is_deeply(
     [ sort map { $_->name } $meta->get_all_properties ],
-    [   qw(abstract date default extra loc module modules pod profile res vater)
+    [   qw(_id _version abstract date default extra loc module modules pod profile res vater)
     ]
 );
 

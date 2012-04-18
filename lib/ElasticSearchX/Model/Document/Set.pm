@@ -100,19 +100,7 @@ sub inflate_result {
     my ( $type, $index ) = ( $res->{_type}, $res->{_index} );
     $index = $index ? $self->model->index($index) : $self->index;
     $type  = $type  ? $index->get_type($type)     : $self->type;
-    my $id     = $type->get_id_attribute;
-    my $parent = $type->get_parent_attribute;
-    my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
-    return $type->name->new(
-        {   %$fields,
-            index    => $index,
-            _id      => $res->{_id},
-            _version => $res->{_version},
-            $fields->{_timestamp} ? ( timestamp     => $fields->{_timestamp} ) : (),
-            $id                ? ( $id->name     => $res->{_id} )        : (),
-            $parent            ? ( $parent->name => $res->{_parent} )    : (),
-        }
-    );
+    return $type->inflate_result( $index, $res );
 }
 
 sub get {

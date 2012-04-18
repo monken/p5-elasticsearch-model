@@ -116,7 +116,29 @@ sub get_query_data {
     };
 }
 
+sub inflate_result {
+    my ( $self, $index, $res ) = @_;
 
+    #my $id     = $self->get_id_attribute;
+    my $parent = $self->get_parent_attribute;
+    my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
+    my $map    = $self->_reverse_field_alias;
+    map {
+        $fields->{ $map->{$_} }
+            = defined $res->{$_}
+            ? $res->{$_}
+            : $fields->{$_}
+        }
+        grep { defined $fields->{$_} || defined $res->{$_} } keys %$map;
+    return $self->name->new(
+        {   %$fields,
+            index    => $index,
+            _id      => $res->{_id},
+            _version => $res->{_version},
+            $parent ? ( $parent->name => $res->{_parent} ) : (),
+        }
+    );
+}
 
 1;
 

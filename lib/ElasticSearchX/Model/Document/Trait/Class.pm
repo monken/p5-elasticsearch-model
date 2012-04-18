@@ -11,6 +11,21 @@ has short_name => ( is => 'ro', builder => '_build_short_name', lazy => 1 );
 has _all_properties =>
     ( is => 'ro', lazy => 1, builder => '_build_all_properties' );
 
+has _field_alias => (
+    is      => 'ro',
+    traits  => ['Hash'],
+    isa     => 'HashRef[Str]',
+    default => sub { {} },
+    handles => { _add_field_alias => 'set' },
+);
+has _reverse_field_alias => (
+    is      => 'ro',
+    traits  => ['Hash'],
+    isa     => 'HashRef[Str]',
+    default => sub { {} },
+    handles => { _add_reverse_field_alias => 'set' },
+);
+
 sub _build_set_class {
     my $self = shift;
     my $set  = $self->name . '::Set';
@@ -19,19 +34,15 @@ sub _build_set_class {
 }
 
 sub mapping {
-    my $self  = shift;
-    my $props = {
-        map { $_->name => $_->build_property }
-        sort { $a->name cmp $b->name }
-        grep { !$_->source_only }
-        grep { !$_->parent } $self->get_all_properties
-    };
+    my $self   = shift;
+    my $props  = { map { $_->mapping } $self->get_all_properties };
     my $parent = $self->get_parent_attribute;
     return {
         _source => { compress => \1 },
         $parent ? ( _parent => { type => $parent->name } ) : (),
         dynamic    => \0,
         properties => $props,
+        map { $_->type_mapping } $self->get_all_properties,
     };
 }
 
@@ -43,9 +54,10 @@ sub _build_short_name {
 
 sub get_id_attribute {
     my $self = shift;
-    my ( $id, $more ) = grep { $_->id } $self->get_all_properties;
-    croak "Cannot have more than one id field on a class" if ($more);
-    return $id || $self->get_attribute('_id');
+    my (@id)
+        = grep { $_->does('ElasticSearchX::Model::Document::Trait::Field::ID') }
+        $self->get_all_properties;
+    return pop @id;
 }
 
 sub get_parent_attribute {
@@ -75,8 +87,6 @@ sub _build_all_properties {
 
 sub get_data {
     my ( $self, $instance ) = @_;
-    return $self->name->_get_data($instance)
-        if ( $self->has_method('_get_data') );
     return {
         map {
             my $deflate
@@ -84,64 +94,29 @@ sub get_data {
                 || $_->is_required && !$_->has_value($instance)
                 ? $_->deflate($instance)
                 : $_->get_raw_value($instance);
-            defined $deflate ? ( $_->name => $deflate ) : ();
+            defined $deflate ? ( $_->field_name => $deflate ) : ();
             } grep { $_->has_value($instance) || $_->is_required }
-            $self->get_all_properties
+            grep { $_->property } $self->get_all_properties
     };
 }
 
-sub _inline_get_data {
-    my $self = shift;
-    my @code = ( 'sub {', 'my $data = {};' );
-    my @type_constraints, my @type_coercions;
-    my $i = 0;
-    foreach my $property ( $self->get_all_properties ) {
-        push( @type_constraints,
-              $property->has_type_constraint
-            ? $property->type_constraint->_compiled_type_constraint
-            : undef );
-        push( @type_coercions,
-              $property->type_constraint
-            ? $property->type_constraint->has_coercion
-                    ? $property->type_constraint->coercion
-                    ->_compiled_type_coercion
-                    : undef
-            : undef );
-        my $has_value   = $property->_inline_instance_has('$_[1]');
-        my @is_inflated = $property->_inline_instance_is_inflated(
-            '$_[1]',
-            '$type_constraints[' . $i . ']',
-            '$type_coercions[' . $i . ']',
-        );
-        my @get_raw_value = $property->_inline_instance_get('$_[1]');
-        push( @code, "if($has_value)" ) unless ( $property->is_required );
-        push( @code,
-            '{',
-            '$data->{"' . quotemeta( $property->name ) . '"} = (',
-            @is_inflated,
-            $property->is_required ? " || !$has_value" : "",
-            ') ? $properties[' . $i . ']->deflate($_[1]) : ',
-            @get_raw_value,
-            ';',
-            'delete $data->{"' . quotemeta( $property->name ) . '"}',
-            '  unless(defined $data->{"'
-                . quotemeta( $property->name ) . '"});',
-            '}' );
-        $i++;
-    }
-    @code = join( "\n", @code, 'return $data;', '}' );
-    my $evaled = eval_closure(
-        environment => {
-            '@type_coercions'   => \@type_coercions,
-            '@type_constraints' => \@type_constraints,
-            '@properties'       => [ $self->get_all_properties ],
-        },
-        source => @code,
-    );
-    $self->add_method( _get_data => $evaled );
+sub get_query_data {
+    my ( $self, $instance ) = @_;
+    return {
+        map {
+            my $deflate
+                = $_->is_inflated($instance)
+                || $_->is_required && !$_->has_value($instance)
+                ? $_->deflate($instance)
+                : $_->get_raw_value($instance);
+            ( my $field = $_->field_name ) =~ s/^_//;
+            defined $deflate ? ( $field => $deflate ) : ();
+            } grep { $_->has_value($instance) || $_->is_required }
+            grep { $_->query_property } $self->get_all_properties
+    };
 }
 
-before make_immutable => \&_inline_get_data if ( $Moose::VERSION >= 2 );
+
 
 1;
 

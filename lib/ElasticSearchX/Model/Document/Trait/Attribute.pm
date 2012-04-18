@@ -6,10 +6,9 @@ use ElasticSearchX::Model::Document::Mapping;
 
 with 'MooseX::Attribute::LazyInflator::Meta::Role::Attribute';
 
-use ElasticSearchX::Model::Document::Types;
+use ElasticSearchX::Model::Document::Types qw(:all);
 use MooseX::Types::Moose qw(ArrayRef);
 
-has id => ( is => 'ro', isa => 'Bool|ArrayRef', default => 0 );
 has index   => ( is => 'ro' );
 has boost   => ( is => 'ro', isa => 'Num' );
 has store   => ( is => 'ro', isa => 'Str', default => 'yes' );
@@ -24,6 +23,10 @@ has include_in_all => ( is => 'ro', isa => 'Bool', default => 1 );
 has source_only    => ( is => 'ro', isa => 'Bool', default => 0 );
 has include_in_root   => ( is => 'ro', isa => 'Bool' );
 has include_in_parent => ( is => 'ro', isa => 'Bool' );
+has property          => ( is => 'ro', isa => 'Bool', default => 1 );
+has query_property    => ( is => 'ro', isa => 'Bool', default => 0 );
+has field_name =>
+    ( is => 'ro', isa => 'Str', lazy => 1, default => sub { shift->name } );
 
 sub build_property {
     my $self = shift;
@@ -38,6 +41,7 @@ before _process_options => sub {
     my ( $self, $name, $options ) = @_;
     %$options = ( builder => 'build_id', lazy => 1, %$options )
         if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
+
     #$options->{required} = 1 if($options->{id});
     $options->{traits} ||= [];
     push(
@@ -58,6 +62,24 @@ after _process_options => sub {
             confess "Attribute $name is required";
         };
     }
+};
+
+sub mapping {
+    my $self = shift;
+    return ( $self->name => $self->build_property )
+        unless ( $self->source_only  || $self->parent );
+    return ();
+}
+
+sub type_mapping { () }
+
+after install_accessors => sub {
+    my $self = shift;
+    return unless($self->associated_class->does_role('ElasticSearchX::Model::Document::Role'));
+    $self->associated_class->_add_field_alias(
+        $self->name => $self->field_name );
+    $self->associated_class->_add_reverse_field_alias(
+        $self->field_name => $self->name );
 };
 
 1;
@@ -107,6 +129,14 @@ but it's value is included in the C<_source> of a document.
 This is helpful if you don't want to index the value of this
 attribute in ElasticSearch, but still want to be able to access
 its value.
+
+=head2 timestamp
+
+ has timestamp => ( timestamp => 1, is => 'ro' );
+ has timestamp => ( timestamp => { store => 1 }, is => 'ro' );
+
+The attribute using this option will become the timestamp field
+(L<http://www.elasticsearch.org/guide/reference/mapping/timestamp-field.html).
 
 =head1 PASS THROUGH ATTRIBUTES
 

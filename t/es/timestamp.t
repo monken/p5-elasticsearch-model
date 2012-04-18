@@ -15,9 +15,15 @@ ok( $twitter->refresh->put(
     'Put mo ok'
 );
 
-ok( my $user = $twitter->query_type('scan')->fields( ['name'] )->first, 'get name field' );
+ok( my $user
+        = $twitter->fields( [qw(_timestamp _source)] )
+        ->first,
+    'get user'
+);
 
-is($user->name, 'Moritz Onken', 'got field ok');
-is($user->nickname, 'mo', 'id field ok');
-
+is( $user->name, 'Moritz Onken', 'got field ok' );
+ok( $user->timestamp, 'get timestamp field' );
+is( $user->nickname, 'mo', 'nickname ok' );
+ok($user->update, 'update');
+is( $user->nickname, 'mo', 'nickname still ok' );
 done_testing;

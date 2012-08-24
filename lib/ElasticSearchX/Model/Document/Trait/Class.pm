@@ -105,6 +105,18 @@ sub add_property {
     $self->add_attribute( $_, %options ) for @$attrs;
 }
 
+sub all_properties_loaded {
+    my ($self, $instance) = @_;
+    my $loaded = $instance->_loaded_attributes;
+    return 1 unless($loaded);
+    my @properties = $self->get_all_properties;
+    for(@properties) {
+        return undef
+            unless($loaded->{$_->name} || $_->has_value($instance));
+    }
+    return 1;
+}
+
 sub get_all_properties {
     my $self = shift;
     return @{ $self->_all_properties }
@@ -157,7 +169,6 @@ sub inflate_result {
     my $parent = $self->get_parent_attribute;
     my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
     my $map    = $self->_reverse_field_alias;
-    my $loaded_attributes = { map { $_ => 1 } keys %$map };
     map {
         $fields->{ $map->{$_} }
             = defined $res->{$_}
@@ -170,7 +181,6 @@ sub inflate_result {
             index    => $index,
             _id      => $res->{_id},
             _version => $res->{_version},
-            _loaded_attributes => $loaded_attributes,
             $parent ? ( $parent->name => $res->{_parent} ) : (),
         }
     );
@@ -206,6 +216,18 @@ last segment of the class name.
 Builds the type mapping for this document class. It loads all properties
 using L</get_all_properties> and calls
 L<ElasticSearchX::Model::Document::Trait::Attribute/build_property>.
+
+=head2 add_property
+
+  $meta->add_property( name => ( is => 'ro', isa => 'Str' ) )
+
+Add a property through the C<$meta> object.
+
+=head2 all_properties_loaded
+
+Returns true if all properties were acutally loaded from storage
+or whether C<ElasticSearchX::Model::Set/fields> was used to return
+a partial result set.
 
 =head2 get_id_attribute
 

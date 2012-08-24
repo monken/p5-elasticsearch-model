@@ -100,7 +100,11 @@ sub inflate_result {
     my ( $type, $index ) = ( $res->{_type}, $res->{_index} );
     $index = $index ? $self->model->index($index) : $self->index;
     $type  = $type  ? $index->get_type($type)     : $self->type;
-    return $type->inflate_result( $index, $res );
+    my $doc = $type->inflate_result( $index, $res );
+    unless($res->{_source}) {
+        $doc->_loaded_attributes({ map { $_ => 1 } @{$self->fields} });
+    }
+    return $doc;
 }
 
 sub get {

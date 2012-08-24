@@ -1,3 +1,10 @@
+0.1.2 - 2012-08-24
+  - requires at least ES 0.19.2 which has a much more stable API
+  - supporting _timestamp and _ttl
+  - pluggable interface for loading special fields (ESX::Model::Document::Trait::Field)
+  - $document->update() will now fail if the document is only
+    partially loaded (i.e. using fields())
+
 0.1.1 - 2012-03-30
   - $type->refresh sets the refresh qs to a true value
   - query_type attribute

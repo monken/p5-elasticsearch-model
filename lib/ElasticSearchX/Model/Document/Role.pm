@@ -11,6 +11,12 @@ sub _does_elasticsearchx_model_document_role {1}
 has _inflated_attributes =>
     ( is => 'rw', isa => 'HashRef', lazy => 1, default => sub { {} } );
 
+has _loaded_attributes => (
+    is => 'rw',
+    isa => 'HashRef',
+    clearer => '_clear_loaded_attributes',
+);
+
 has index => (
     isa => 'ElasticSearchX::Model::Index',
     is  => 'rw'
@@ -37,6 +43,8 @@ has _version => (
 
 sub update {
     my $self = shift;
+    die "cannot update partially loaded document"
+        unless($self->meta->all_properties_loaded($self));
     return $self->put( { $self->_update(@_) } );
 }
 
@@ -71,6 +79,7 @@ sub _create {
 sub put {
     my ( $self, $qs ) = @_;
     my $return = $self->index->model->es->index( $self->_put($qs) );
+    $self->_clear_loaded_attributes;
     my $id     = $self->meta->get_id_attribute;
     $id->set_value( $self, $return->{_id} ) if ($id);
     $self->meta->get_attribute('_id')->set_value( $self, $return->{_id} );

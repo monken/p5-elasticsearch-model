@@ -8,7 +8,6 @@ use Moose::Exporter;
 use ElasticSearchX::Model::Document::Trait::Class;
 use ElasticSearchX::Model::Document::Trait::Attribute;
 use ElasticSearchX::Model::Document::Types ();
-use Module::Find                           ();
 
 my ( undef, undef, $init_meta ) = Moose::Exporter->build_import_methods(
     install   => [qw(import unimport)],
@@ -17,35 +16,7 @@ my ( undef, undef, $init_meta ) = Moose::Exporter->build_import_methods(
         { class => ['ElasticSearchX::Model::Document::Trait::Class'] },
 );
 
-my %attr_traits = map {
-    Class::Load::load_class($_);
-    my ($name) = ( $_ =~ /::(\w+)$/ );
-    lc($name) => $_
-    } Module::Find::findallmod(
-    'ElasticSearchX::Model::Document::Trait::Field');
-
-sub has {
-    my $meta = shift;
-    my $name = shift;
-
-    Moose->throw_error('Usage: has \'name\' => ( key => value, ... )')
-        if @_ % 2 == 1;
-    my %options = ( definition_context => Moose::Util::_caller_info(), @_ );
-    $options{traits} ||= [];
-    push(
-        @{ $options{traits} },
-        'ElasticSearchX::Model::Document::Trait::Attribute'
-    ) if ( $options{property} || !exists $options{property} );
-    delete $options{property};
-    
-    for ( grep { $attr_traits{$_} } keys %options ) {
-        push( @{ $options{traits} }, $attr_traits{$_} );
-        #(my $class_trait = $attr_traits{$_}) =~ s/::Field::/::Class::/;
-        #Moose::Util::apply_all_roles($meta, $class_trait);
-    }
-    my $attrs = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
-    $meta->add_attribute( $_, %options ) for @$attrs;
-}
+sub has { shift->add_property(@_) }
 
 sub init_meta {
     my $class = shift;
@@ -131,12 +102,21 @@ document was pushed by someone else. If you don't care about a version
 mismatch, either pass C<< version => undef >> or use L</put>. You can
 also set a version explicitly with C<< version => $version >>.
 
+If the document was built from a query that did not include all fields
+(i.e. L<ElasticSearchX::Model::Set/fields> was set), then L</update> will
+fail since partial updates to a document are not yet supported in
+ElasticSearch. You can either pull the full document from ElasticSearch
+and update then or call L</put>.
+
 =head2 put
 
 =head2 put( { %qs } )
 
+B<< Consider using L</update> or L</create> instead. >> They provide sanity
+checks and are generally what you want to use.
+
 This puts a document to the ElasticSearch server. Use this
-to update or create a document. It calls
+to create a document or force an update. It calls
 L<ElasticSearchX::Model::Document::Trait::Class/get_data> to retrieve the
 data from an L<ElasticSearchX::Model::Document> object.
 

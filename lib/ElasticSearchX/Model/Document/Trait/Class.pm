@@ -2,8 +2,9 @@ package ElasticSearchX::Model::Document::Trait::Class;
 
 # ABSTRACT: Trait that extends the meta class of a document class
 use Moose::Role;
-use List::Util ();
 use Carp;
+use List::Util ();
+use Module::Find ();
 use Eval::Closure;
 
 has set_class  => ( is => 'ro', builder => '_build_set_class',  lazy => 1 );
@@ -25,6 +26,18 @@ has _reverse_field_alias => (
     default => sub { {} },
     handles => { _add_reverse_field_alias => 'set' },
 );
+
+has _attribute_traits => ( is => 'ro', lazy_build => 1 );
+
+sub _build__attribute_traits {
+    return { map {
+            Class::Load::load_class($_);
+            my ($name) = ( $_ =~ /::(\w+)$/ );
+            lc($name) => $_
+        } Module::Find::findallmod(
+        'ElasticSearchX::Model::Document::Trait::Field')
+    }
+}
 
 sub _build_set_class {
     my $self = shift;
@@ -69,6 +82,27 @@ sub get_parent_attribute {
 
 sub get_version_attribute {
     shift->get_attribute('_version');
+}
+
+sub add_property {
+    my ($self, $name) = (shift, shift);
+    Moose->throw_error('Usage: has \'name\' => ( key => value, ... )')
+        if @_ % 2 == 1;
+    my %options = ( definition_context => Moose::Util::_caller_info(), @_ );
+    $options{traits} ||= [];
+    push(
+        @{ $options{traits} },
+        'ElasticSearchX::Model::Document::Trait::Attribute'
+    ) if ( $options{property} || !exists $options{property} );
+    delete $options{property};
+    my $attr_traits = $self->_attribute_traits;
+    for ( grep { $attr_traits->{$_} } keys %options ) {
+        push( @{ $options{traits} }, $attr_traits->{$_} );
+        #(my $class_trait = $attr_traits{$_}) =~ s/::Field::/::Class::/;
+        #Moose::Util::apply_all_roles($meta, $class_trait);
+    }
+    my $attrs = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
+    $self->add_attribute( $_, %options ) for @$attrs;
 }
 
 sub get_all_properties {
@@ -123,6 +157,7 @@ sub inflate_result {
     my $parent = $self->get_parent_attribute;
     my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
     my $map    = $self->_reverse_field_alias;
+    my $loaded_attributes = { map { $_ => 1 } keys %$map };
     map {
         $fields->{ $map->{$_} }
             = defined $res->{$_}
@@ -135,6 +170,7 @@ sub inflate_result {
             index    => $index,
             _id      => $res->{_id},
             _version => $res->{_version},
+            _loaded_attributes => $loaded_attributes,
             $parent ? ( $parent->name => $res->{_parent} ) : (),
         }
     );

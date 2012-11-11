@@ -26,6 +26,7 @@ has _reverse_field_alias => (
     default => sub { {} },
     handles => { _add_reverse_field_alias => 'set' },
 );
+has _id_attribute => ( is => 'ro', lazy_build => 1 );
 
 has _attribute_traits => ( is => 'ro', lazy_build => 1 );
 
@@ -66,10 +67,12 @@ sub _build_short_name {
 }
 
 sub get_id_attribute {
+    return shift->_id_attribute;
+}
+
+sub _build__id_attribute {
     my $self = shift;
-    my (@id)
-        = grep { $_->does('ElasticSearchX::Model::Document::Trait::Field::ID') }
-        $self->get_all_properties;
+    my (@id) = grep { $_->does('ElasticSearchX::Model::Document::Trait::Field::ID') } $self->get_all_properties;
     return pop @id;
 }
 

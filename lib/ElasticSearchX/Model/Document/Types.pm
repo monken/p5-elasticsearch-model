@@ -136,12 +136,12 @@ deflate 'File::stat', via { return { List::MoreUtils::mesh( @stat, @$_ ) } },
 deflate [ 'ArrayRef', 'HashRef' ],
     via { shift->dynamic ? $_ : encode_json($_) }, inline_as {
     return '$value' if ( $_[0]->dynamic );
-    return 'JSON::XS::encode_json($value)';
+    return 'JSON::encode_json($value)';
     };
 inflate [ 'ArrayRef', 'HashRef' ],
     via { shift->dynamic ? $_ : decode_json($_) }, inline_as {
     return '$value' if ( $_[0]->dynamic );
-    return 'JSON::XS::decode_json($value)';
+    return 'JSON::decode_json($value)';
     };
 
 deflate 'ArrayRef', via {$_}, inline_as {'$value'};

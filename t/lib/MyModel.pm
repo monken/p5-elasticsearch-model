@@ -15,10 +15,7 @@ sub testing {
     }
 
     my $model = $class->new( es => ':9900' );
-    my $version
-        = version->parse( $model->es->current_server_version->{number} )
-        ->numify;
-    if ( $version < 0.019002 ) {
+    if ( $model->es_version < 0.019002 ) {
         plan skip_all => 'Requires ElasticSearch 0.19.2';
     }
 

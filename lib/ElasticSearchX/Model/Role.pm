@@ -3,6 +3,7 @@ use Moose::Role;
 use ElasticSearch;
 use ElasticSearchX::Model::Index;
 use Try::Tiny;
+use version;
 use ElasticSearchX::Model::Document::Types qw(ES);
 
 has es => ( is => 'rw', lazy_build => 1, coerce => 1, isa => ES );
@@ -63,6 +64,13 @@ sub deploy {
 sub bulk {
     my $self = shift;
     return ElasticSearchX::Model::Bulk->new( es => $self->es, @_ );
+}
+
+sub es_version {
+    my $self = shift;
+    my $string = $self->es->current_server_version->{number};
+    $string =~ s/RC//g;
+    return version->parse( $string )->numify;
 }
 
 1;

@@ -190,6 +190,15 @@ B<< This will delete all the data in your indices. >>
 
  $model->deploy( delete => 1 );
 
+=head2 es_version
+
+ if($model->es_version > 0.02) { ... }
+
+Returns the L<version> number of the ElasticSearch server you are currently
+connected to. ElasticSearch uses Semantic Versioning. However, release candidates
+have a special syntax. For example, the version 0.20.0.RC1 would be parsed
+as 0.020_000_001.
+
 =head1 PERFORMANCE CONSIDERATIONS
 
 Creating objects is a quite expensive operation. If you are

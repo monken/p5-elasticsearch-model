@@ -120,7 +120,7 @@ to C<string>.
 The value of this property will be used as C<parent> id.
 Since the parent id is stored in the C<_parent> field, it
 is adviced to set L</source_only> to C<1> to prevent the
-field to be stored redundantly.
+field from being stored redundantly.
 
 =head2 source_only
 
@@ -136,7 +136,19 @@ its value.
  has timestamp => ( timestamp => { store => 1 }, is => 'ro' );
 
 The attribute using this option will become the timestamp field
-(L<http://www.elasticsearch.org/guide/reference/mapping/timestamp-field.html).
+(L<http://www.elasticsearch.org/guide/reference/mapping/timestamp-field.html>).
+
+=head2 ttl
+
+ has expire => ( ttl => 1, is => 'ro' );
+
+ $document->expire(86400) # document will expire in one day
+
+Documents with a ttl field will set the _ttl property on the document in
+ElasticSearch. This will cause ElasticSearch to remove the document
+from the index automatically once the time to live has expired.
+
+See L<http://www.elasticsearch.org/guide/reference/mapping/ttl-field.html>.
 
 =head1 PASS THROUGH ATTRIBUTES
 

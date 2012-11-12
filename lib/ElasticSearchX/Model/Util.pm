@@ -1,6 +1,7 @@
 package ElasticSearchX::Model::Util;
 use strict;
 use warnings;
+use Digest::SHA1;
 
 sub digest {
     my $digest = join( "\0", @_ );

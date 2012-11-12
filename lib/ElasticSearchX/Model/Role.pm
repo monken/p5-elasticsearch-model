@@ -2,7 +2,6 @@ package ElasticSearchX::Model::Role;
 use Moose::Role;
 use ElasticSearch;
 use ElasticSearchX::Model::Index;
-use Try::Tiny;
 use version;
 use ElasticSearchX::Model::Document::Types qw(ES);
 
@@ -23,11 +22,13 @@ sub deploy {
         my $index = $self->index($name);
         next if ( $index->alias_for && $name eq $index->alias_for );
         $name = $index->alias_for if ( $index->alias_for );
-        try { $t->request( { method => 'DELETE', cmd => "/$name", } ); }
-        if ( $params{delete} );
+        local $@;
+        eval {
+            $t->request( { method => 'DELETE', cmd => "/$name" } )
+        } if ( $params{delete} );
         my $dep     = $index->deployment_statement;
         my $mapping = delete $dep->{mappings};
-        try {
+        eval {
             $t->request(
                 {   method => 'PUT',
                     cmd    => "/$name",

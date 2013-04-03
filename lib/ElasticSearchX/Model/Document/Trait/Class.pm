@@ -91,7 +91,7 @@ sub add_property {
     my ($self, $name) = (shift, shift);
     Moose->throw_error('Usage: has \'name\' => ( key => value, ... )')
         if @_ % 2 == 1;
-    my %options = ( definition_context => Moose::Util::_caller_info(), @_ );
+    my %options = ( definition_context => _caller_info(), @_ );
     $options{traits} ||= [];
     push(
         @{ $options{traits} },
@@ -106,6 +106,13 @@ sub add_property {
     }
     my $attrs = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
     $self->add_attribute( $_, %options ) for @$attrs;
+}
+
+sub _caller_info {
+    my $level = @_ ? ( $_[0] + 1 ) : 2;
+    my %info;
+    @info{qw(package file line)} = caller($level);
+    return \%info;
 }
 
 sub all_properties_loaded {

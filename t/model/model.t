@@ -36,8 +36,8 @@ my $meta = $model->meta;
 ok( $model->does('ElasticSearchX::Model::Role'), 'Does role' );
 
 is_deeply(
-    [ $meta->get_index_list ],
-    [ 'irc', 'twitter', 'twitter_v1' ],
+    [ sort $meta->get_index_list ],
+    [ sort 'irc', 'twitter', 'twitter_v1' ],
     'Has index twitter'
 );
 

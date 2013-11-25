@@ -44,7 +44,8 @@ sub _build_types {
         Module::Find::findallmod($namespace),
         grep {/^\Q$namespace\E::/} keys %stash
     );
-    map { Class::MOP::load_class($_) } @found;
+    require Module::Runtime;
+    map { Module::Runtime::require_module($_) } @found;
     @found = grep {
         $_->isa('Moose::Object')
             && $_->does('ElasticSearchX::Model::Document::Role')
@@ -67,7 +68,8 @@ sub _build_namespace {
 sub type {
     my ( $self, $type ) = @_;
     my $class = $self->get_type($type)->set_class;
-    Class::MOP::load_class($class);
+    require Module::Runtime;
+    Module::Runtime::require_module($class);
     return $class->new(
         index => $self,
         type  => $self->get_type($type),

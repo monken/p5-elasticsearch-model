@@ -31,8 +31,9 @@ has _id_attribute => ( is => 'ro', lazy_build => 1 );
 has _attribute_traits => ( is => 'ro', lazy_build => 1 );
 
 sub _build__attribute_traits {
+    require Module::Runtime;
     return { map {
-            Class::Load::load_class($_);
+            Module::Runtime::require_module($_);
             my ($name) = ( $_ =~ /::(\w+)$/ );
             lc($name) => $_
         } Module::Find::findallmod(
@@ -42,8 +43,9 @@ sub _build__attribute_traits {
 
 sub _build_set_class {
     my $self = shift;
-    my $set  = $self->name . '::Set';
-    eval { Class::MOP::load_class($set); } and return $set
+    require Module::Runtime;
+    my $set  = Module::Runtime::compose_module_name( $self->name , 'Set' );
+    eval { Module::Runtime::require_module($set); } and return $set
         or return 'ElasticSearchX::Model::Document::Set';
 }
 

@@ -1,3 +1,6 @@
+0.1.7
+  - Replace Class::MOP::load_class with Module::Runtime (Kent Fredric)
+
 0.1.6 - 2013-05-08
   - ignore_missing 1 for aliases
 

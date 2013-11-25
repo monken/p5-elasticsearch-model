@@ -1,3 +1,7 @@
+0.1.7 - 2013-11-25
+  - use Class::Load::load_class instead of MOP::Class (Kent Fredric)
+  - Fix issue with id property not being detected correctly
+
 0.1.6 - 2013-05-08
   - ignore_missing 1 for aliases
 

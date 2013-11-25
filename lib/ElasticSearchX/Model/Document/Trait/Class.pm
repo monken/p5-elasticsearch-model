@@ -27,7 +27,7 @@ has _reverse_field_alias => (
     default => sub { {} },
     handles => { _add_reverse_field_alias => 'set' },
 );
-has _id_attribute => ( is => 'ro', lazy_build => 1 );
+has _id_attribute => ( is => 'rw', lazy_build => 1 );
 
 has _attribute_traits => ( is => 'ro', lazy_build => 1 );
 

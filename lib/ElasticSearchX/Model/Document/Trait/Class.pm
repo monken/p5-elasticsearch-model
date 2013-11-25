@@ -5,6 +5,7 @@ use Moose::Role;
 use Carp;
 use List::Util ();
 use Module::Find ();
+use Class::Load  ();
 use Eval::Closure;
 
 has set_class  => ( is => 'ro', builder => '_build_set_class',  lazy => 1 );
@@ -43,7 +44,7 @@ sub _build__attribute_traits {
 sub _build_set_class {
     my $self = shift;
     my $set  = $self->name . '::Set';
-    eval { Class::MOP::load_class($set); } and return $set
+    eval { Class::Load::load_class($set); } and return $set
         or return 'ElasticSearchX::Model::Document::Set';
 }
 

@@ -1,6 +1,7 @@
 package ElasticSearchX::Model::Index;
 use Moose;
 use Module::Find ();
+use Class::Load  ();
 use ElasticSearchX::Model::Document::Types qw(:all);
 
 has name => ( is => 'ro' );
@@ -44,7 +45,7 @@ sub _build_types {
         Module::Find::findallmod($namespace),
         grep {/^\Q$namespace\E::/} keys %stash
     );
-    map { Class::MOP::load_class($_) } @found;
+    map { Class::Load::load_class($_) } @found;
     @found = grep {
         $_->isa('Moose::Object')
             && $_->does('ElasticSearchX::Model::Document::Role')
@@ -67,7 +68,7 @@ sub _build_namespace {
 sub type {
     my ( $self, $type ) = @_;
     my $class = $self->get_type($type)->set_class;
-    Class::MOP::load_class($class);
+    Class::Load::load_class($class);
     return $class->new(
         index => $self,
         type  => $self->get_type($type),

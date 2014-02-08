@@ -4,6 +4,7 @@ use lib qw(t/lib);
 use MyModel;
 use Test::Most;
 use DateTime;
+use JSON;
 
 my $model = MyModel->testing;
 my $twitter   = $model->index('twitter');
@@ -57,7 +58,7 @@ my $raw = {
 $tweets = $tweets->raw;
 is_deeply(
     $tweets->get( $tweet->id ),
-    { %$raw, exists => 'true' },
+    { %$raw, exists => JSON::true },
     'Raw response'
 );
 

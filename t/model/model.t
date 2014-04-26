@@ -64,8 +64,6 @@ is_deeply(
 
 ok( $idx->does('MyIndexTrait'), 'Trait has been applied' );
 
-isa_ok( $idx->model->es, 'ElasticSearch' );
-
 isa_ok( $idx->type('user'), 'ElasticSearchX::Model::Document::Set' );
 
 is_deeply( $idx->type('user')->index, $idx, 'MyModel::IRC::User' );

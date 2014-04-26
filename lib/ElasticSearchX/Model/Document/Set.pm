@@ -35,8 +35,10 @@ sub add_sort { push( @{ $_[0]->sort }, $_[1] ); return $_[0]; }
 
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
 
-has query_type =>
+has search_type =>
     ( isa => QueryType, is => 'rw', traits => [qw(ChainedClone)] );
+
+sub query_type { shift->search_type(@_) }
 
 has mixin => ( is => 'ro', isa => 'HashRef', traits => [qw(ChainedClone)] );
 
@@ -60,7 +62,7 @@ sub _build_qs {
 
     # we only want to set qs if they are not the default
     $qs->{refresh} = 1 if ( $self->_refresh );
-    $qs->{query_type} = $self->query_type if ( $self->query_type );
+    $qs->{search_type} = $self->search_type if $self->search_type;
     return $qs;
 }
 
@@ -68,9 +70,8 @@ sub _build_query {
     my $self = shift;
     my $query
         = { query => $self->query ? $self->query : { match_all => {} } };
-    $query->{filter} = $self->filter if ( $self->filter );
-    $query = { query => { filtered => $query } }
-        if ( $self->filter && !$self->query );
+    $query = { query => { filtered => { filter => $self->filter, query => $query->{query} } } }
+        if $self->filter;
     my $q = {
         %$query,
         $self->size   ? ( size   => $self->size )   : (),
@@ -137,7 +138,7 @@ sub get {
         type  => $type,
         id    => $id,
         $self->fields ? ( fields => $self->fields ) : (),
-        ignore_missing => 1,
+        ignore => [404],
         %{ $qs || {} },
     );
     return undef unless ($res);
@@ -148,11 +149,12 @@ sub all {
     my ( $self, $qs ) = @_;
     $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
-    my $res = $self->es->transport->request(
-        {   method => 'POST',
-            cmd    => "/$index/$type/_search",
-            data   => $self->_build_query,
-            qs     => { version => 1, %{ $qs || {} } },
+    my $res = $self->es->search(
+        {   index => $index,
+            type => $type,
+            body   => $self->_build_query,
+            version => 1,
+            %{ $qs || {} },
         }
     );
     return $res unless ( $self->inflate );
@@ -173,14 +175,14 @@ sub count {
     my ( $self, $qs ) = @_;
     $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
-    my $res = $self->es->transport->request(
-        {   method => 'POST',
-            cmd    => "/$index/$type/_search",
-            data   => { %{ $self->_build_query }, size => 0 },
-            qs     => $qs,
+    my $res = $self->es->count(
+        {   index => $index,
+            type => $type,
+            body   => { %{ $self->_build_query } },
+            %$qs,
         }
     );
-    return $res->{hits}->{total};
+    return $res->{count};
 }
 
 sub delete {
@@ -190,7 +192,7 @@ sub delete {
     return $self->es->delete_by_query(
         index => $self->index->name,
         type  => $self->type->short_name,
-        query => $query->{filter} ? { filtered => $query } : $query->{query},
+        body  => $query,
         %$qs,
     );
 }
@@ -279,7 +281,7 @@ build a C<filtered> query, which performs far better.
 
 =head2 sort
 
-=head2 query_type
+=head2 search_type
 
 These attributes are passed directly to the ElasticSearch search request.
 

@@ -3,6 +3,7 @@ use Moose;
 use Test::More;
 use IO::Socket::INET;
 use ElasticSearchX::Model;
+use Search::Elasticsearch;
 use version;
 
 index twitter => ( namespace => 'MyModel' );
@@ -14,12 +15,14 @@ sub testing {
             'Requires an ElasticSearch server running on port 9900';
     }
 
-    my $model = $class->new( es => ':9900' );
+    my $model = $class->new( es => Search::Elasticsearch->new(
+        nodes => "127.0.0.1:9900",
+        # trace_to => "Stderr",
+    ) );
     if ( $model->es_version < 0.019002 ) {
         plan skip_all => 'Requires ElasticSearch 0.19.2';
     }
 
-    # $model->es->trace_calls(1);
     ok( $model->deploy( delete => 1 ), 'Deploy ok' );
     return $model;
 }

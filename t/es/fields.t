@@ -15,7 +15,7 @@ ok( $twitter->refresh->put(
     'Put mo ok'
 );
 
-ok( my $user = $twitter->query_type('scan')->fields( ['name'] )->first, 'get name field' );
+ok( my $user = $twitter->query_type('query_then_fetch')->fields( ['name'] )->first, 'get name field' );
 
 is($user->name, 'Moritz Onken', 'got field ok');
 is($user->nickname, 'mo', 'id field ok');

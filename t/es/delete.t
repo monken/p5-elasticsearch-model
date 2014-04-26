@@ -7,6 +7,7 @@ use DateTime;
 
 my $model   = MyModel->testing;
 my $twitter = $model->index('twitter')->type('user');
+$twitter->delete;
 ok( $twitter->put(
         {   nickname => $_,
             name     => 'mo',

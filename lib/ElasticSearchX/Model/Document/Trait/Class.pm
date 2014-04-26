@@ -12,6 +12,8 @@ has set_class  => ( is => 'ro', builder => '_build_set_class',  lazy => 1 );
 has short_name => ( is => 'ro', builder => '_build_short_name', lazy => 1 );
 has _all_properties =>
     ( is => 'ro', lazy => 1, builder => '_build_all_properties' );
+has _isa_arrayref =>
+    ( is => 'ro', lazy => 1, builder => '_build_isa_arrayref' );
 
 has _field_alias => (
     is      => 'ro',
@@ -142,6 +144,13 @@ sub _build_all_properties {
     ];
 }
 
+sub _build_isa_arrayref {
+    return {
+        map { $_->name => $_->isa_arrayref }
+        @{shift->_all_properties}
+    };
+}
+
 sub get_data {
     my ( $self, $instance ) = @_;
     return {
@@ -178,7 +187,13 @@ sub inflate_result {
 
     #my $id     = $self->get_id_attribute;
     my $parent = $self->get_parent_attribute;
+    my $arrays = $self->_isa_arrayref;
     my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
+    $fields = { map {
+        my $is_array = ref $fields->{$_} eq "ARRAY";
+        $arrays->{$_} && !$is_array ? ( $_ => [$fields->{$_}] ) :
+        !$arrays->{$_} && $is_array ? ( $_ => $fields->{$_}->[0] ) : ( $_ => $fields->{$_} );
+    } keys %$fields };
     my $map    = $self->_reverse_field_alias;
     map {
         $fields->{ $map->{$_} }

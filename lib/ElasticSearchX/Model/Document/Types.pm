@@ -2,7 +2,6 @@ package ElasticSearchX::Model::Document::Types;
 use List::MoreUtils ();
 use DateTime::Format::Epoch::Unix;
 use DateTime::Format::ISO8601;
-use ElasticSearch;
 use MooseX::Attribute::Deflator;
 use MooseX::Attribute::Deflator::Moose;
 use DateTime;

@@ -58,7 +58,7 @@ my $raw = {
 $tweets = $tweets->raw;
 is_deeply(
     $tweets->get( $tweet->id ),
-    { %$raw, exists => JSON::true },
+    { %$raw, found => JSON::true },
     'Raw response'
 );
 
@@ -69,7 +69,7 @@ is_deeply(
 );
 
 is( $twitter->type('tweet')->filter( { term => { user => 'mo' } } )
-        ->query( { field => { 'message.analyzed' => 'baby' } } )->size(100)
+        ->query( { query_string => { default_field => 'message.analyzed', query => 'baby' } } )->size(100)
         ->all,
     1,
     'get all tweets that match "hello"'

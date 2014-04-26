@@ -27,6 +27,14 @@ has property          => ( is => 'ro', isa => 'Bool', default => 1 );
 has query_property    => ( is => 'ro', isa => 'Bool', default => 0 );
 has field_name =>
     ( is => 'ro', isa => 'Str', lazy => 1, default => sub { shift->name } );
+has isa_arrayref => ( is => 'ro', isa => 'Bool', builder => '_build_isa_arrayref' );
+
+sub _build_isa_arrayref {
+    my $self = shift;
+    my $tc = $self->type_constraint;
+    return 0 unless $tc;
+    return $tc->is_a_type_of("ArrayRef");
+}
 
 sub build_property {
     my $self = shift;
@@ -42,7 +50,6 @@ before _process_options => sub {
     %$options = ( builder => 'build_id', lazy => 1, %$options )
         if ( $options->{id} && ref $options->{id} eq 'ARRAY' );
 
-    #$options->{required} = 1 if($options->{id});
     $options->{traits} ||= [];
     push(
         @{ $options->{traits} },

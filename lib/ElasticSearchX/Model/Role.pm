@@ -1,6 +1,6 @@
 package ElasticSearchX::Model::Role;
 use Moose::Role;
-use ElasticSearch;
+use Search::Elasticsearch;
 use ElasticSearchX::Model::Index;
 use version;
 use ElasticSearchX::Model::Document::Types qw(ES);
@@ -8,10 +8,9 @@ use ElasticSearchX::Model::Document::Types qw(ES);
 has es => ( is => 'rw', lazy_build => 1, coerce => 1, isa => ES );
 
 sub _build_es {
-    ElasticSearch->new(
-        servers   => '127.0.0.1:9200',
-        transport => 'http',
-        timeout   => 30,
+    Search::Elasticsearch->new(
+        nodes     => '127.0.0.1:9200',
+        cxn     => 'HTTPTiny',
     );
 }
 
@@ -24,30 +23,30 @@ sub deploy {
         $name = $index->alias_for if ( $index->alias_for );
         local $@;
         eval {
-            $t->request( { method => 'DELETE', cmd => "/$name" } )
+            $self->es->indices->delete( index => $name )
         } if ( $params{delete} );
         my $dep     = $index->deployment_statement;
         my $mapping = delete $dep->{mappings};
         eval {
-            $t->request(
+            $t->perform_request(
                 {   method => 'PUT',
-                    cmd    => "/$name",
-                    data   => $dep,
+                    path   => "/$name",
+                    body   => $dep,
                 }
             );
         };
         sleep(1);
         while ( my ( $k, $v ) = each %$mapping ) {
-            $t->request(
+            $t->perform_request(
                 {   method => 'PUT',
-                    cmd    => "/$name/$k/_mapping",
-                    data   => { $k => $v },
+                    path   => "/$name/$k/_mapping",
+                    body   => { $k => $v },
                 }
             );
         }
         if ( my $alias = $index->alias_for ) {
             my @aliases
-                = keys %{ $self->es->get_aliases( index => $index->name, ignore_missing => 1 )
+                = keys %{ $self->es->indices->get_aliases( index => $index->name, ignore => [404] )
                     || {} };
             my $actions = [
                 (   map {
@@ -56,7 +55,7 @@ sub deploy {
                 ),
                 { add => { index => $alias, alias => $index->name } }
             ];
-            $self->es->aliases( actions => $actions );
+            $self->es->indices->update_aliases( body => { actions => $actions } );
         }
     }
     return 1;
@@ -69,7 +68,7 @@ sub bulk {
 
 sub es_version {
     my $self = shift;
-    my $string = $self->es->current_server_version->{number};
+    my $string = $self->es->info->{version}->{number};
     $string =~ s/RC//g;
     return version->parse( $string )->numify;
 }

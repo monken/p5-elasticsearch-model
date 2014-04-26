@@ -1,33 +1,42 @@
 package ElasticSearchX::Model::Bulk;
+use Search::Elasticsearch::Bulk;
 use Moose;
 
 has stash => (
     is      => 'ro',
-    traits  => ['Array'],
-    handles => { add => 'push', stash_size => 'count' },
-    default => sub { [] },
+    isa => "Search::Elasticsearch::Bulk",
+    handles => { stash_size => '_buffer_count', commit => "flush" },
+    lazy_build => 1,
 );
 has size => ( is => 'ro', isa => 'Int', default => 100 );
 has es => ( is => 'ro' );
 
+sub _build_stash {
+    my $self = shift;
+    $self->es->bulk_helper( max_count => $self->size );
+}
+
+sub add {
+    my ($self, $action, $payload) = (shift, %{$_[0]});
+    $payload->{source} = delete $payload->{body};
+    $self->stash->add_action($action => $payload);
+}
+
 sub update {
     my ( $self, $doc, $qs ) = @_;
     $self->add( { index => ref $doc eq 'HASH' ? $doc : { $doc->_put( $doc->_update($qs) ) } } );
-    $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
 
 sub create {
     my ( $self, $doc, $qs ) = @_;
     $self->add( { create => ref $doc eq 'HASH' ? $doc : { $doc->_put($qs) } } );
-    $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
 
 sub put {
     my ( $self, $doc, $qs ) = @_;
     $self->add( { index => ref $doc eq 'HASH' ? $doc : { $doc->_put, %{ $qs || {} } } } );
-    $self->commit if ( $self->stash_size > $self->size );
     return $self;
 }
 
@@ -42,21 +51,12 @@ sub delete {
             }
         }
     );
-    $self->commit if ( $self->stash_size > $self->size );
     return $self;
-}
-
-sub commit {
-    my $self = shift;
-    return unless ( $self->stash_size );
-    my $result = $self->es->bulk( $self->stash );
-    $self->clear;
-    return $result;
 }
 
 sub clear {
     my $self = shift;
-    @{ $self->stash } = ();
+    $self->stash->clear_buffer;
     return $self;
 }
 
@@ -80,7 +80,7 @@ __END__
 
 =head1 DESCRIPTION
 
-This class is a wrapper around L<ElasticSearch/bulk()> which adds
+This class is a wrapper around L<Search::Elasticsearch::Bulk> which adds
 some convenience. By specifiying a L</size> you set the maximum
 number of documents that are processed in one request. You can either
 L</put> or L</delete> documents. Once the C<$bulk> object is out
@@ -104,7 +104,7 @@ gets out of scope or if you call L</commit> explicitly.
 
 =head2 es
 
-The L<ElasticSearch> object.
+The L<Search::Elasticsearch> object.
 
 =head1 METHODS
 

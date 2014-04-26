@@ -20,7 +20,7 @@ use Test::MockObject::Extends;
 use strict;
 use warnings;
 
-my $es = Test::MockObject::Extends->new( ElasticSearch->new );
+my $es = Test::MockObject::Extends->new( Search::Elasticsearch->new );
 my $i  = 0;
 $es->mock( bulk => sub { $i++ } );
 
@@ -29,7 +29,7 @@ ok( my $model = MyModel->new( es => $es ), 'Created object' );
 my $stash;
 {
     ok( my $bulk = $model->bulk, 'bulk object' );
-    $stash = $bulk->stash;
+    $stash = $bulk->stash->_buffer;
     $bulk->put( $model->index('default')->type('tweet')
             ->new_document( { text => 'foo' } ) );
     is( $bulk->stash_size, 1, 'stash size is 1' );

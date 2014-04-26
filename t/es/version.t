@@ -41,6 +41,6 @@ ok( $bulk->create($version1), 'bulk create already indexed doc' );
 
 my $return = $bulk->commit;
 
-is( @{ $return->{errors} }, 1, 'error' );
+is( $return->{errors}, 1, 'error' );
 
 done_testing;

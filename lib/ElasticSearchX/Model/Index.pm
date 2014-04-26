@@ -104,12 +104,12 @@ sub deployment_statement {
 
 sub refresh {
     my $self = shift;
-    $self->es->refresh_index( index => $self->name );
+    $self->es->indices->refresh( index => $self->name );
 }
 
 sub delete {
     my $self = shift;
-    $self->es->delete_index( index => $self->name );
+    $self->es->indices->delete( index => $self->name );
 }
 
 __PACKAGE__->meta->make_immutable( inline_constructor => 0 );

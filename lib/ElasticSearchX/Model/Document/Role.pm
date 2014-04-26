@@ -78,7 +78,8 @@ sub _create {
 
 sub put {
     my ( $self, $qs ) = @_;
-    my $return = $self->index->model->es->index( $self->_put($qs) );
+    my $method = $qs && ref $qs eq "HASH" && (delete $qs->{create}) ? "create" : "index";
+    my $return = $self->index->model->es->$method( $self->_put($qs) );
     $self->_clear_loaded_attributes;
     my $id     = $self->meta->get_id_attribute;
     $id->set_value( $self, $return->{_id} ) if ($id);
@@ -98,7 +99,7 @@ sub _put {
         index => $self->index->name,
         type  => $self->meta->short_name,
         $id ? ( id => $id ) : (),
-        data => $data,
+        body => $data,
         $parent ? ( parent => $parent->get_value($self) ) : (),
         %$qs,
     );

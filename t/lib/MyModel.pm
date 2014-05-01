@@ -12,15 +12,15 @@ sub testing {
     my $class = shift;
     unless ( IO::Socket::INET->new('127.0.0.1:9900') ) {
         plan skip_all =>
-            'Requires an ElasticSearch server running on port 9900';
+            'Requires an Elasticsearch server running on port 9900';
     }
 
     my $model = $class->new( es => Search::Elasticsearch->new(
         nodes => "127.0.0.1:9900",
         # trace_to => "Stderr",
     ) );
-    if ( $model->es_version < 0.019002 ) {
-        plan skip_all => 'Requires ElasticSearch 0.19.2';
+    if ( $model->es_version < 1 ) {
+        plan skip_all => 'Requires Elasticsearch 1.0.0';
     }
 
     ok( $model->deploy( delete => 1 ), 'Deploy ok' );

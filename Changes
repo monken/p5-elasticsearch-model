@@ -1,6 +1,11 @@
+{{$NEXT}}
+  - Removes source compression (no longer needed) (Clinton Gormley)
+  - Adds support for source() filtering to Document::Set (Clinton Gormley)
+  - The ES host will now default to ENV{ES} if present (Clinton Gormley)
+
 0.1.8-TRIAL - 2014-04-26
   - Elasticsearch with version less than 0.90 are no longer officially supported and tested
-  - Switch to Search::Elasticsearch from ElasticSearch 
+  - Switch to Search::Elasticsearch from ElasticSearch
 
 0.1.7 - 2013-11-25
   - use Class::Load::load_class instead of MOP::Class (Kent Fredric)

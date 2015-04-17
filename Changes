@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.1.8     2015-04-17 11:28:49+02:00 Europe/Berlin
   - Removes source compression (no longer needed) (Clinton Gormley)
   - Adds support for source() filtering to Document::Set (Clinton Gormley)
   - The ES host will now default to ENV{ES} if present (Clinton Gormley)

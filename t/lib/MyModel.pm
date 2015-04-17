@@ -16,7 +16,7 @@ sub testing {
     }
 
     my $model = $class->new( es => Search::Elasticsearch->new(
-        nodes => "127.0.0.1:9900",
+        nodes => $ENV{ES}||"localhost:9900",
         # trace_to => "Stderr",
     ) );
     if ( $model->es_version < 1 ) {

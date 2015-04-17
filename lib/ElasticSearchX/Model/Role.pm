@@ -9,7 +9,7 @@ has es => ( is => 'rw', lazy_build => 1, coerce => 1, isa => ES );
 
 sub _build_es {
     Search::Elasticsearch->new(
-        nodes     => '127.0.0.1:9200',
+        nodes     => $ENV{ES}||'127.0.0.1:9200',
         cxn     => 'HTTPTiny',
     );
 }
@@ -17,6 +17,7 @@ sub _build_es {
 sub deploy {
     my ( $self, %params ) = @_;
     my $t = $self->es->transport;
+
     foreach my $name ( $self->meta->get_index_list ) {
         my $index = $self->index($name);
         next if ( $index->alias_for && $name eq $index->alias_for );

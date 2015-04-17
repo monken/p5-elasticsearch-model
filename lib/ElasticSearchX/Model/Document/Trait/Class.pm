@@ -55,7 +55,6 @@ sub mapping {
     my $props  = { map { $_->mapping } $self->get_all_properties };
     my $parent = $self->get_parent_attribute;
     return {
-        _source => { compress => \1 },
         $parent ? ( _parent => { type => $parent->name } ) : (),
         dynamic    => \0,
         properties => $props,

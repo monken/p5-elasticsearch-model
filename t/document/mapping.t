@@ -65,7 +65,7 @@ my $module  = $meta->get_attribute('module')->build_property;
 my $modules = $meta->get_attribute('modules')->build_property;
 is_deeply(
     $module,
-    {   _source         => { compress => \1 },
+    {
         dynamic         => \0,
         type            => 'nested',
         include_in_root => \1,
@@ -94,7 +94,7 @@ is_deeply( $module, $modules );
 
 is_deeply(
     MyClass->meta->mapping,
-    {   _source    => { compress => \1 },
+    {
         _parent    => { type     => 'vater' },
         dynamic    => \0,
         properties => {

@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.1.9     2015-04-17 14:52:16+02:00 Europe/Berlin
   - Adds ElasticSearchX::Model::Document::EmbeddedRole (Clinton Gormley)
 
 0.1.8     2015-04-17 11:28:49+02:00 Europe/Berlin

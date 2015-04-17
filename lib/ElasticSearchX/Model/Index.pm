@@ -80,6 +80,7 @@ sub deployment_statement {
     my $self   = shift;
     my $deploy = {};
     foreach my $type ( $self->get_types ) {
+        next if $type->does_role('ElasticSearchX::Model::Document::EmbeddedRole');
         $deploy->{mappings}->{ $type->short_name } = $type->mapping;
     }
     my $model = $self->model->meta;
@@ -139,7 +140,7 @@ to C<1> value.
 
 =head2 namespace
 
-Types are loaded from this namespace if they are not explicitly 
+Types are loaded from this namespace if they are not explicitly
 defined using L</types>. The namespace defaults to the package
 name of the model.
 

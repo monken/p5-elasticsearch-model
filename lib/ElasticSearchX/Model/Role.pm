@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Role;
+
 use Moose::Role;
 use Search::Elasticsearch;
 use ElasticSearchX::Model::Index;

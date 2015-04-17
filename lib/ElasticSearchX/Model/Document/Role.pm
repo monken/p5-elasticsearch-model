@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Document::Role;
+
 use Moose::Role;
 use ElasticSearchX::Model::Util ();
 use JSON;

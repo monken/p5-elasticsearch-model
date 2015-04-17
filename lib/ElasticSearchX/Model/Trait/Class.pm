@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Trait::Class;
+
 use Moose::Role;
 use List::Util ();
 use Carp;

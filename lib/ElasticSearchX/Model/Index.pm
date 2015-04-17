@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Index;
+
 use Moose;
 use Module::Find ();
 use Class::Load  ();

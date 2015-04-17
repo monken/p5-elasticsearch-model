@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Bulk;
+
 use Search::Elasticsearch::Bulk;
 use Moose;
 

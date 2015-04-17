@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Document::Trait::Field::ID;
+
 use Moose::Role;
 use ElasticSearchX::Model::Document::Types qw(:all);
 
@@ -16,6 +17,7 @@ after install_accessors => sub {
 };
 
 package ElasticSearchX::Model::Document::Trait::Class::ID;
+
 use Moose::Role;
 
 1;

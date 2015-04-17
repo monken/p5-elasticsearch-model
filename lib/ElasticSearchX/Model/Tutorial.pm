@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Tutorial;
+
 # ABSTRACT: Tutorial for ElasticSearchX::Model
 1;
 

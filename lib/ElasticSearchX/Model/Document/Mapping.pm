@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Document::Mapping;
+
 use strict;
 use warnings;
 use Moose::Util::TypeConstraints;

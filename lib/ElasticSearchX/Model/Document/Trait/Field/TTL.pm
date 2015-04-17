@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Document::Trait::Field::TTL;
+
 use Moose::Role;
 use ElasticSearchX::Model::Document::Types qw(:all);
 

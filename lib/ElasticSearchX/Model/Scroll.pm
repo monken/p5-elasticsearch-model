@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Scroll;
+
 use Moose;
 use Search::Elasticsearch::Scroll;
 

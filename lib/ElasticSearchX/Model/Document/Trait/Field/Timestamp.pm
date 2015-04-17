@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Document::Trait::Field::Timestamp;
+
 use Moose::Role;
 use ElasticSearchX::Model::Document::Types qw(:all);
 
@@ -23,6 +24,7 @@ around query_property => sub {1};
 around property => sub {0};
 
 package ElasticSearchX::Model::Document::Trait::Class::Timestamp;
+
 use Moose::Role;
 
 1;

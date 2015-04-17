@@ -27,7 +27,8 @@ has property          => ( is => 'ro', isa => 'Bool', default => 1 );
 has query_property    => ( is => 'ro', isa => 'Bool', default => 0 );
 has field_name =>
     ( is => 'ro', isa => 'Str', lazy => 1, default => sub { shift->name } );
-has isa_arrayref => ( is => 'ro', isa => 'Bool', builder => '_build_isa_arrayref' );
+has isa_arrayref =>
+    ( is => 'ro', lazy => 1, isa => 'Bool', builder => '_build_isa_arrayref' );
 
 sub _build_isa_arrayref {
     my $self = shift;

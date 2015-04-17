@@ -31,6 +31,12 @@ has [qw(fields sort)] => (
     traits => [qw(ChainedClone)]
 );
 
+has source => (
+    is      => 'rw',
+    traits  => [qw(ChainedClone)],
+    default => sub { \1 },
+);
+
 sub add_sort { push( @{ $_[0]->sort }, $_[1] ); return $_[0]; }
 
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
@@ -68,20 +74,19 @@ sub _build_qs {
 
 sub _build_query {
     my $self = shift;
-    my $query
-        = { query => $self->query ? $self->query : { match_all => {} } };
-    $query = { query => { filtered => { filter => $self->filter, query => $query->{query} } } }
-        if $self->filter;
-    my $q = {
-        %$query,
+    my $q = $self->query || { match_all => {} };
+    if ( my $f = $self->filter ) {
+        $q = { filtered => { query => $q, filter => $f } };
+    }
+    return {
+        query   => $q,
+        _source => $self->source,
         $self->size   ? ( size   => $self->size )   : (),
         $self->from   ? ( from   => $self->from )   : (),
         $self->fields ? ( fields => $self->fields ) : (),
         $self->sort   ? ( sort   => $self->sort )   : (),
         $self->mixin ? ( %{ $self->mixin } ) : (),
     };
-
-    return $q;
 }
 
 sub put {
@@ -175,10 +180,12 @@ sub count {
     my ( $self, $qs ) = @_;
     $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
+    my $query = $self->_build_query;
+    delete $query->{_source};
     my $res = $self->es->count(
         {   index => $index,
-            type => $type,
-            body   => { %{ $self->_build_query } },
+            type  => $type,
+            body  => $query,
             %$qs,
         }
     );
@@ -189,6 +196,7 @@ sub delete {
     my ( $self, $qs ) = @_;
     $qs = $self->_build_qs($qs);
     my $query = $self->_build_query;
+    delete $query->{_source};
     return $self->es->delete_by_query(
         index => $self->index->name,
         type  => $self->type->short_name,

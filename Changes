@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.2.0     2015-04-18 11:52:23+02:00 Europe/Berlin
   - Bulk now only commits if there's something in the stash
 
 0.1.9     2015-04-17 14:52:16+02:00 Europe/Berlin

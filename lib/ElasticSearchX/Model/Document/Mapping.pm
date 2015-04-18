@@ -22,7 +22,8 @@ sub maptc {
 $MAPPING{Any} = sub {
 
     my ( $attr, $tc ) = @_;
-    return (
+
+    my %mapping = (
         store => $attr->store,
         $attr->index            ? ( index          => $attr->index )   : (),
         $attr->type eq 'object' ? ( dynamic        => $attr->dynamic ) : (),
@@ -31,6 +32,7 @@ $MAPPING{Any} = sub {
         type => 'string',
         $attr->analyzer->[0] ? ( analyzer => $attr->analyzer->[0] ) : (),
     );
+    return _set_doc_values(%mapping);
 };
 
 $MAPPING{Str} = sub {
@@ -41,15 +43,16 @@ $MAPPING{Str} = sub {
     {
         my @analyzer = @{ $attr->{analyzer} };
         push( @analyzer, 'standard' ) unless (@analyzer);
-        return (
+        return _set_doc_values(
             type   => 'multi_field',
             fields => {
                 (
                     $attr->not_analyzed
                     ? (
                         $attr->name => {
-                            store => $attr->store,
-                            index => 'not_analyzed',
+                            store      => $attr->store,
+                            index      => 'not_analyzed',
+                            doc_values => \1,
                             !$attr->include_in_all
                             ? ( include_in_all => \0 )
                             : (),
@@ -63,7 +66,8 @@ $MAPPING{Str} = sub {
                     store => $attr->store,
                     index => 'analyzed',
                     $attr->boost ? ( boost => $attr->boost ) : (),
-                    type => $attr->type,
+                    type      => $attr->type,
+                    fielddata => { format => 'disabled' },
                     %term,
                     analyzer => shift @analyzer
                 },
@@ -73,7 +77,8 @@ $MAPPING{Str} = sub {
                             store => $attr->store,
                             index => 'analyzed',
                             $attr->boost ? ( boost => $attr->boost ) : (),
-                            type => $attr->type,
+                            type      => $attr->type,
+                            fielddata => { format => 'disabled' },
                             %term,
                             analyzer => $_
                             }
@@ -82,22 +87,25 @@ $MAPPING{Str} = sub {
             }
         );
     }
-    return ( index => 'not_analyzed', %term, maptc( $attr, $tc->parent ) );
+    return _set_doc_values(
+        index => 'not_analyzed',
+        %term, maptc( $attr, $tc->parent )
+    );
 };
 
 $MAPPING{Num} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'float' );
+    return _set_doc_values( maptc( $attr, $tc->parent ), type => 'float' );
 };
 
 $MAPPING{Int} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'integer' );
+    return _set_doc_values( maptc( $attr, $tc->parent ), type => 'integer' );
 };
 
 $MAPPING{Bool} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'boolean' );
+    return _set_doc_values( maptc( $attr, $tc->parent ), type => 'boolean' );
 };
 
 $MAPPING{ScalarRef} = sub {
@@ -144,7 +152,7 @@ $MAPPING{'MooseX::Types::ElasticSearch::Location'} = sub {
     my ( $attr, $tc ) = @_;
     my %mapping = maptc( $attr, $tc->parent );
     delete $mapping{$_} for (qw(index store));
-    return ( %mapping, type => 'geo_point' );
+    return ( %mapping, type => 'geo_point', doc_values => \1 );
 };
 
 $MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
@@ -160,5 +168,26 @@ $MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
 
 $MAPPING{'DateTime'} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'date' );
+    return _set_doc_values(
+        maptc( $attr, $tc->parent ),
+        type       => 'date',
+        doc_values => \1
+    );
 };
+
+sub _set_doc_values {
+    my %mapping = @_;
+
+    if ( $mapping{type} eq 'string'
+        && ( $mapping{index} || 'analyzed' ) eq 'analyzed' )
+    {
+        $mapping{fielddata} = { format => 'disabled' };
+        delete $mapping{doc_values};
+    }
+    else {
+        $mapping{doc_values} = \1;
+        delete $mapping{fielddata};
+    }
+    return %mapping
+
+}

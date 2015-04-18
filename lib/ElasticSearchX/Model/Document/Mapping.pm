@@ -50,9 +50,10 @@ $MAPPING{Str} = sub {
                     $attr->not_analyzed
                     ? (
                         $attr->name => {
-                            store      => $attr->store,
-                            index      => 'not_analyzed',
-                            doc_values => \1,
+                            store        => $attr->store,
+                            index        => 'not_analyzed',
+                            ignore_above => 2048,
+                            doc_values   => \1,
                             !$attr->include_in_all
                             ? ( include_in_all => \0 )
                             : (),
@@ -88,7 +89,8 @@ $MAPPING{Str} = sub {
         );
     }
     return _set_doc_values(
-        index => 'not_analyzed',
+        index        => 'not_analyzed',
+        ignore_above => 2048,
         %term, maptc( $attr, $tc->parent )
     );
 };

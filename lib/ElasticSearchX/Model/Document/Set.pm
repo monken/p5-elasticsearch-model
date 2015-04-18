@@ -107,8 +107,8 @@ sub inflate_result {
     $index = $index ? $self->model->index($index) : $self->index;
     $type  = $type  ? $index->get_type($type)     : $self->type;
     my $doc = $type->inflate_result( $index, $res );
-    unless($res->{_source}) {
-        $doc->_loaded_attributes({ map { $_ => 1 } @{$self->fields} });
+    unless ( $res->{_source} ) {
+        $doc->_loaded_attributes( { map { $_ => 1 } @{ $self->fields } } );
     }
     return $doc;
 }
@@ -134,7 +134,7 @@ sub get {
                       $_->has_deflator
                     ? $_->deflate( $self, $args->{ $_->name } )
                     : $args->{ $_->name }
-                } @fields
+            } @fields
         );
     }
 
@@ -155,9 +155,10 @@ sub all {
     $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
     my $res = $self->es->search(
-        {   index => $index,
-            type => $type,
-            body   => $self->_build_query,
+        {
+            index   => $index,
+            type    => $type,
+            body    => $self->_build_query,
             version => 1,
             %{ $qs || {} },
         }
@@ -183,7 +184,8 @@ sub count {
     my $query = $self->_build_query;
     delete $query->{_source};
     my $res = $self->es->count(
-        {   index => $index,
+        {
+            index => $index,
             type  => $type,
             body  => $query,
             %$qs,

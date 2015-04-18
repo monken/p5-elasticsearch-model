@@ -48,7 +48,7 @@ sub _build_types {
     );
     map { Class::Load::load_class($_) } @found;
     @found = grep {
-        $_->isa('Moose::Object')
+               $_->isa('Moose::Object')
             && $_->does('ElasticSearchX::Model::Document::Role')
     } @found;
     return { map { $_->meta->short_name => $_->meta } @found };
@@ -80,7 +80,9 @@ sub deployment_statement {
     my $self   = shift;
     my $deploy = {};
     foreach my $type ( $self->get_types ) {
-        next if $type->does_role('ElasticSearchX::Model::Document::EmbeddedRole');
+        next
+            if $type->does_role(
+            'ElasticSearchX::Model::Document::EmbeddedRole');
         $deploy->{mappings}->{ $type->short_name } = $type->mapping;
     }
     my $model = $self->model->meta;

@@ -7,8 +7,10 @@ use DateTime;
 
 my $model   = MyModel->testing;
 my $twitter = $model->index('twitter')->type('tweet');
-ok( my $tweet = $twitter->put(
-        {   user    => 'mo',
+ok(
+    my $tweet = $twitter->put(
+        {
+            user    => 'mo',
             message => 'Elastic baby!',
         },
         { refresh => 1 }

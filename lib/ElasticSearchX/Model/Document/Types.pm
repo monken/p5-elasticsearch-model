@@ -36,13 +36,14 @@ use Sub::Exporter -setup => {
 use MooseX::Types::Moose qw/Int Str Bool ArrayRef HashRef/;
 use MooseX::Types::Structured qw(Dict Tuple Optional slurpy);
 
-subtype TimestampField, as Dict [
+subtype TimestampField,
+    as Dict [
     enabled => Bool,
     path    => Optional [Str],
     store   => Optional [Bool],
     index   => Optional [Str],
     slurpy HashRef,
-];
+    ];
 coerce TimestampField, from Int, via {
     { enabled => 1, store => 1 };
 };
@@ -53,13 +54,14 @@ coerce TimestampField, from HashRef, via {
     { enabled => 1, %$_ };
 };
 
-subtype TTLField, as Dict [
+subtype TTLField,
+    as Dict [
     enabled => Bool,
     default => Optional [Str],
     store   => Optional [Bool],
     index   => Optional [Str],
     slurpy HashRef,
-];
+    ];
 coerce TTLField, from Int, via {
     { enabled => 1 };
 };
@@ -77,7 +79,6 @@ coerce 'DateTime', from Int, via {
 coerce 'DateTime', from Str, via {
     DateTime::Format::ISO8601->parse_datetime($_);
 };
-
 
 subtype Types, as HashRef ['Object'], where {
     !grep { $_->isa('Moose::Meta::Class') } keys %$_;
@@ -99,7 +100,7 @@ coerce Types, from ArrayRef ['Str'], via {
         map {
             my $meta = Class::MOP::Class->initialize($_);
             $meta->short_name => $meta
-            } @$array
+        } @$array
     };
 };
 
@@ -150,7 +151,7 @@ inflate 'ArrayRef', via {$_}, inline_as {'$value'};
 deflate 'DateTime', via { $_->iso8601 }, inline_as {'$value->iso8601'};
 inflate 'DateTime', via {
     $_ =~ /^\d+$/
-        ? DateTime->from_epoch( epoch => $_/1000 )
+        ? DateTime->from_epoch( epoch => $_ / 1000 )
         : DateTime::Format::ISO8601->parse_datetime($_);
 }, inline_as {
     q(

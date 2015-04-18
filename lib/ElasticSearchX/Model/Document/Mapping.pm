@@ -24,10 +24,10 @@ $MAPPING{Any} = sub {
     my ( $attr, $tc ) = @_;
     return (
         store => $attr->store,
-        $attr->index ? ( index => $attr->index ) : (),
-        $attr->type eq 'object' ? ( dynamic => $attr->dynamic ) : (),
-        $attr->boost           ? ( boost          => $attr->boost ) : (),
-        !$attr->include_in_all ? ( include_in_all => \0 )           : (),
+        $attr->index            ? ( index          => $attr->index )   : (),
+        $attr->type eq 'object' ? ( dynamic        => $attr->dynamic ) : (),
+        $attr->boost            ? ( boost          => $attr->boost )   : (),
+        !$attr->include_in_all  ? ( include_in_all => \0 )             : (),
         type => 'string',
         $attr->analyzer->[0] ? ( analyzer => $attr->analyzer->[0] ) : (),
     );
@@ -44,8 +44,10 @@ $MAPPING{Str} = sub {
         return (
             type   => 'multi_field',
             fields => {
-                (   $attr->not_analyzed
-                    ? ( $attr->name => {
+                (
+                    $attr->not_analyzed
+                    ? (
+                        $attr->name => {
                             store => $attr->store,
                             index => 'not_analyzed',
                             !$attr->include_in_all
@@ -65,7 +67,8 @@ $MAPPING{Str} = sub {
                     %term,
                     analyzer => shift @analyzer
                 },
-                (   map {
+                (
+                    map {
                         $_ => {
                             store => $attr->store,
                             index => 'analyzed',
@@ -74,7 +77,7 @@ $MAPPING{Str} = sub {
                             %term,
                             analyzer => $_
                             }
-                        } @analyzer
+                    } @analyzer
                 )
             }
         );
@@ -125,7 +128,7 @@ $MAPPING{'MooseX::Types::Structured::Dict[]'} = sub {
     return (
         %mapping,
         type => $attr->type eq 'nested' ? 'nested' : 'object',
-        dynamic => \( $attr->dynamic ),
+        dynamic    => \( $attr->dynamic ),
         properties => $value,
         $attr->include_in_root   ? ( include_in_root   => \1 ) : (),
         $attr->include_in_parent ? ( include_in_parent => \1 ) : (),

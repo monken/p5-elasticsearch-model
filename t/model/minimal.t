@@ -26,7 +26,8 @@ ok( my $idx = $model->index('default'), 'Get default index' );
 
 is_deeply(
     $idx->types,
-    {   user  => MyModel::User->meta,
+    {
+        user  => MyModel::User->meta,
         tweet => MyModel::Tweet->meta
     },
     'Types loaded ok'

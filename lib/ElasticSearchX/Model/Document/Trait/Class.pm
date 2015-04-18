@@ -3,7 +3,7 @@ package ElasticSearchX::Model::Document::Trait::Class;
 # ABSTRACT: Trait that extends the meta class of a document class
 use Moose::Role;
 use Carp;
-use List::Util ();
+use List::Util   ();
 use Module::Find ();
 use Class::Load  ();
 use Eval::Closure;
@@ -34,13 +34,14 @@ has _id_attribute => ( is => 'rw', lazy_build => 1 );
 has _attribute_traits => ( is => 'ro', lazy_build => 1 );
 
 sub _build__attribute_traits {
-    return { map {
+    return {
+        map {
             Class::Load::load_class($_);
             my ($name) = ( $_ =~ /::(\w+)$/ );
             lc($name) => $_
-        } Module::Find::findallmod(
-        'ElasticSearchX::Model::Document::Trait::Field')
-    }
+            } Module::Find::findallmod(
+            'ElasticSearchX::Model::Document::Trait::Field')
+    };
 }
 
 sub _build_set_class {
@@ -74,7 +75,9 @@ sub get_id_attribute {
 
 sub _build__id_attribute {
     my $self = shift;
-    my (@id) = grep { $_->does('ElasticSearchX::Model::Document::Trait::Field::ID') } $self->get_all_properties;
+    my (@id)
+        = grep { $_->does('ElasticSearchX::Model::Document::Trait::Field::ID') }
+        $self->get_all_properties;
     return pop @id;
 }
 
@@ -90,7 +93,7 @@ sub get_version_attribute {
 }
 
 sub add_property {
-    my ($self, $name) = (shift, shift);
+    my ( $self, $name ) = ( shift, shift );
     Moose->throw_error('Usage: has \'name\' => ( key => value, ... )')
         if @_ % 2 == 1;
     my %options = ( definition_context => _caller_info(), @_ );
@@ -103,6 +106,7 @@ sub add_property {
     my $attr_traits = $self->_attribute_traits;
     for ( grep { $attr_traits->{$_} } keys %options ) {
         push( @{ $options{traits} }, $attr_traits->{$_} );
+
         #(my $class_trait = $attr_traits{$_}) =~ s/::Field::/::Class::/;
         #Moose::Util::apply_all_roles($meta, $class_trait);
     }
@@ -118,13 +122,13 @@ sub _caller_info {
 }
 
 sub all_properties_loaded {
-    my ($self, $instance) = @_;
+    my ( $self, $instance ) = @_;
     my $loaded = $instance->_loaded_attributes;
-    return 1 unless($loaded);
+    return 1 unless ($loaded);
     my @properties = $self->get_all_properties;
-    for(@properties) {
+    for (@properties) {
         return undef
-            unless($loaded->{$_->name} || $_->has_value($instance));
+            unless ( $loaded->{ $_->name } || $_->has_value($instance) );
     }
     return 1;
 }
@@ -144,10 +148,8 @@ sub _build_all_properties {
 }
 
 sub _build_isa_arrayref {
-    return {
-        map { $_->name => $_->isa_arrayref }
-        @{shift->_all_properties}
-    };
+    return { map { $_->name => $_->isa_arrayref }
+            @{ shift->_all_properties } };
 }
 
 sub get_data {
@@ -188,12 +190,15 @@ sub inflate_result {
     my $parent = $self->get_parent_attribute;
     my $arrays = $self->_isa_arrayref;
     my $fields = { %{ $res->{_source} || {} }, %{ $res->{fields} || {} } };
-    $fields = { map {
-        my $is_array = ref $fields->{$_} eq "ARRAY";
-        $arrays->{$_} && !$is_array ? ( $_ => [$fields->{$_}] ) :
-        !$arrays->{$_} && $is_array ? ( $_ => $fields->{$_}->[0] ) : ( $_ => $fields->{$_} );
-    } keys %$fields };
-    my $map    = $self->_reverse_field_alias;
+    $fields = {
+        map {
+            my $is_array = ref $fields->{$_} eq "ARRAY";
+            $arrays->{$_}        && !$is_array ? ( $_ => [ $fields->{$_} ] )
+                : !$arrays->{$_} && $is_array  ? ( $_ => $fields->{$_}->[0] )
+                :                                ( $_ => $fields->{$_} );
+        } keys %$fields
+    };
+    my $map = $self->_reverse_field_alias;
     map {
         $fields->{ $map->{$_} }
             = defined $res->{$_}
@@ -202,7 +207,8 @@ sub inflate_result {
         }
         grep { defined $fields->{$_} || defined $res->{$_} } keys %$map;
     return $self->name->new(
-        {   %$fields,
+        {
+            %$fields,
             index    => $index,
             _id      => $res->{_id},
             _version => $res->{_version},

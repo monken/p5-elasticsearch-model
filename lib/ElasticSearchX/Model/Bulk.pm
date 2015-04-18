@@ -4,9 +4,9 @@ use Search::Elasticsearch::Bulk;
 use Moose;
 
 has stash => (
-    is      => 'ro',
-    isa => "Search::Elasticsearch::Bulk",
-    handles => { stash_size => '_buffer_count', commit => "flush" },
+    is         => 'ro',
+    isa        => "Search::Elasticsearch::Bulk",
+    handles    => { stash_size => '_buffer_count', commit => "flush" },
     lazy_build => 1,
 );
 has size => ( is => 'ro', isa => 'Int', default => 100 );
@@ -18,35 +18,50 @@ sub _build_stash {
 }
 
 sub add {
-    my ($self, $action, $payload) = (shift, %{$_[0]});
+    my ( $self, $action, $payload ) = ( shift, %{ $_[0] } );
     $payload->{source} = delete $payload->{body};
-    $self->stash->add_action($action => $payload);
+    $self->stash->add_action( $action => $payload );
 }
 
 sub update {
     my ( $self, $doc, $qs ) = @_;
-    $self->add( { index => ref $doc eq 'HASH' ? $doc : { $doc->_put( $doc->_update($qs) ) } } );
+    $self->add(
+        {
+            index => ref $doc eq 'HASH'
+            ? $doc
+            : { $doc->_put( $doc->_update($qs) ) }
+        }
+    );
     return $self;
 }
 
 sub create {
     my ( $self, $doc, $qs ) = @_;
-    $self->add( { create => ref $doc eq 'HASH' ? $doc : { $doc->_put($qs) } } );
+    $self->add(
+        { create => ref $doc eq 'HASH' ? $doc : { $doc->_put($qs) } } );
     return $self;
 }
 
 sub put {
     my ( $self, $doc, $qs ) = @_;
-    $self->add( { index => ref $doc eq 'HASH' ? $doc : { $doc->_put, %{ $qs || {} } } } );
+    $self->add(
+        {
+            index => ref $doc eq 'HASH'
+            ? $doc
+            : { $doc->_put, %{ $qs || {} } }
+        }
+    );
     return $self;
 }
 
 sub delete {
     my ( $self, $doc, $qs ) = @_;
     $self->add(
-        {   delete => ref $doc eq 'HASH'
+        {
+            delete => ref $doc eq 'HASH'
             ? $doc
-            : { index => $doc->index->name,
+            : {
+                index => $doc->index->name,
                 type  => $doc->meta->short_name,
                 id    => $doc->_id,
             }

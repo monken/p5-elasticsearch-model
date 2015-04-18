@@ -6,11 +6,13 @@ use Test::Most;
 use DateTime;
 use JSON;
 
-my $model = MyModel->testing;
+my $model     = MyModel->testing;
 my $twitter   = $model->index('twitter');
 my $timestamp = DateTime->now;
-ok( my $tweet = $twitter->type('tweet')->put(
-        {   user      => 'mo',
+ok(
+    my $tweet = $twitter->type('tweet')->put(
+        {
+            user      => 'mo',
             post_date => $timestamp,
             message   => 'Elastic baby!',
         },
@@ -32,8 +34,10 @@ qr/fields/;
 
 ok( $tweets->get( $tweet->id ), 'Get tweet by id' );
 
-ok( $tweet = $tweets->get(
-        {   user      => 'mo',
+ok(
+    $tweet = $tweets->get(
+        {
+            user      => 'mo',
             post_date => $timestamp,
         }
     ),
@@ -68,9 +72,13 @@ is_deeply(
     'Raw all response'
 );
 
-is( $twitter->type('tweet')->filter( { term => { user => 'mo' } } )
-        ->query( { query_string => { default_field => 'message.analyzed', query => 'baby' } } )->size(100)
-        ->all,
+is(
+    $twitter->type('tweet')->filter( { term => { user => 'mo' } } )->query(
+        {
+            query_string =>
+                { default_field => 'message.analyzed', query => 'baby' }
+        }
+        )->size(100)->all,
     1,
     'get all tweets that match "hello"'
 );
@@ -114,8 +122,10 @@ is( $twitter->type('tweet')->filter( { term => { user => 'mo' } } )
     my $old = $model->index('twitter');
     my $new = $model->index('twitter_v2');
 
-    ok( my $tweet = $old->type('tweet')->put(
-            {   user      => 'mo',
+    ok(
+        my $tweet = $old->type('tweet')->put(
+            {
+                user      => 'mo',
                 post_date => $timestamp,
                 message   => 'Elastic baby!',
             },
@@ -130,7 +140,8 @@ is( $twitter->type('tweet')->filter( { term => { user => 'mo' } } )
         $tweet->put;
     }
     ok( $model->meta->remove_index('twitter'), 'remove index twitter' );
-    ok( $model->meta->add_index(
+    ok(
+        $model->meta->add_index(
             'twitter', { namespace => 'MyModel', alias_for => 'twitter_v2' }
         ),
         'add index twitter'

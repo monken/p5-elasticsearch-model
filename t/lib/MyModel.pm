@@ -15,10 +15,13 @@ sub testing {
             'Requires an Elasticsearch server running on port 9900';
     }
 
-    my $model = $class->new( es => Search::Elasticsearch->new(
-        nodes => $ENV{ES}||"localhost:9900",
-        # trace_to => "Stderr",
-    ) );
+    my $model = $class->new(
+        es => Search::Elasticsearch->new(
+            nodes => $ENV{ES} || "localhost:9900",
+
+            # trace_to => "Stderr",
+        )
+    );
     if ( $model->es_version < 1 ) {
         plan skip_all => 'Requires Elasticsearch 1.0.0';
     }

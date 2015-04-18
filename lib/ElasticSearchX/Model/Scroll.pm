@@ -31,8 +31,9 @@ has qs => (
 sub _build__scrolled_search {
     my $self = shift;
     Search::Elasticsearch::Scroll->new(
-        {   es => $self->set->es,
-            body => $self->set->_build_query,
+        {
+            es     => $self->set->es,
+            body   => $self->set->_build_query,
             scroll => $self->scroll,
             index  => $self->index->name,
             type   => $self->type->short_name,

@@ -12,11 +12,12 @@ use MooseX::Types -declare => [ 'Resources', 'Profile' ];
 use MooseX::Types::Structured qw(Dict Tuple Optional);
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef Undef/;
 
-subtype Resources, as Dict [
+subtype Resources,
+    as Dict [
     license => Optional [ ArrayRef [Str] ],
     homepage => Optional [Str],
     bugtracker => Optional [ Dict [ web => Str, mailto => Str ] ]
-];
+    ];
 
 subtype Profile, as ArrayRef [ Dict [ id => Str ] ];
 coerce Profile, from HashRef, via { [$_] };
@@ -57,7 +58,8 @@ my $meta = MyClass->meta;
 
 is_deeply(
     [ sort map { $_->name } $meta->get_all_properties ],
-    [   qw(_id _version abstract date default extra loc module modules pod profile res vater)
+    [
+        qw(_id _version abstract date default extra loc module modules pod profile res vater)
     ]
 );
 
@@ -95,7 +97,7 @@ is_deeply( $module, $modules );
 is_deeply(
     MyClass->meta->mapping,
     {
-        _parent    => { type     => 'vater' },
+        _parent    => { type => 'vater' },
         dynamic    => \0,
         properties => {
             date => {

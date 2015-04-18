@@ -77,7 +77,8 @@ sub clear {
 }
 
 sub DEMOLISH {
-    shift->commit;
+    my $self = shift;
+    $self->commit if $self->has_stash;
 }
 
 1;

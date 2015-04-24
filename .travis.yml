@@ -1,0 +1,35 @@
+language: perl
+perl:
+  - "5.20"
+  - "5.18"
+  - "5.16"
+
+matrix:
+  allow_failures:
+    - perl: "5.20"
+
+notifications:
+  email:
+    recipients:
+      - olaf@wundersolutions.com
+    on_success: always
+    on_failure: always
+  irc: "irc.perl.org#metacpan-travis"
+
+before_install:
+  - cpanm -n Devel::Cover::Report::Coveralls
+  - cpanm -n Carton
+
+install:
+  - 'carton install'
+
+script:
+  # Devel::Cover isn't in the cpanfile
+  # but if it's installed into the global dirs this should work.
+  - HARNESS_PERL_SWITCHES=-MDevel::Cover=+ignore,local carton exec prove -lv t
+
+after_success:
+  - cover -report coveralls
+
+services:
+  - elasticsearch

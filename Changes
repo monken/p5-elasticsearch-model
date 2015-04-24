@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+0.2.1     2015-04-23 21:47:01-04:00 America/Toronto
   - Added doc_values to all not_analyzed fields and prevented loading of fielddata on analyzed string fields (Clinton Gormley)
   - Added ignore_above to the not_analyzed string mappings to avoid processing very large strings (Clinton Gormley)
 

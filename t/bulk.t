@@ -27,7 +27,7 @@ use Test::MockObject::Extends;
 
 my $es = Test::MockObject::Extends->new( Search::Elasticsearch->new );
 my $i  = 0;
-$es->mock( bulk => sub { $i++ } );
+$es->mock( bulk => sub { $i++; return {} } );
 
 ok( my $model = MyModel->new( es => $es ), 'Created object' );
 

@@ -1,4 +1,5 @@
 {{$NEXT}}
+  - Update test suite to keep up with Elasticsearch 1.x behaviour (Olaf Alders)
 
 0.2.1     2015-04-23 21:47:01-04:00 America/Toronto
   - Added doc_values to all not_analyzed fields and prevented loading of fielddata on analyzed string fields (Clinton Gormley)

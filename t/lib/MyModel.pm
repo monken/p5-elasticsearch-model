@@ -30,7 +30,6 @@ sub testing {
     if ( $model->es_version < 1 ) {
         plan skip_all => 'Requires Elasticsearch 1.0.0';
     }
-
     ok( $model->deploy( delete => 1 ), 'Deploy ok' );
     return $model;
 }

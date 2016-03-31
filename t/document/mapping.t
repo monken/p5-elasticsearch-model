@@ -72,7 +72,6 @@ is_deeply(
         include_in_root => \1,
         properties      => {
             name => {
-                doc_values => \1,
                 fields     => {
                     analyzed => {
                         analyzer  => 'standard',
@@ -109,7 +108,6 @@ is_deeply(
         },
         properties => {
             abstract => {
-                doc_values => \1,
                 fields     => {
                     abstract => {
                         doc_values   => \1,
@@ -153,7 +151,6 @@ is_deeply(
                 include_in_root => \1,
                 properties      => {
                     name => {
-                        doc_values => \1,
                         fields     => {
                             analyzed => {
                                 analyzer  => 'standard',
@@ -182,7 +179,6 @@ is_deeply(
                 include_in_root => \1,
                 properties      => {
                     name => {
-                        doc_values => \1,
                         fields     => {
                             analyzed => {
                                 analyzer  => 'standard',

@@ -186,6 +186,9 @@ sub _set_doc_values {
         $mapping{fielddata} = { format => 'disabled' };
         delete $mapping{doc_values};
     }
+    elsif ( $mapping{type} eq 'multi_field' ) {
+        delete $mapping{fielddata};
+    }
     else {
         $mapping{doc_values} = \1;
         delete $mapping{fielddata};

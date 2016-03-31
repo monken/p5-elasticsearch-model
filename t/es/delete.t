@@ -33,6 +33,7 @@ $twitter->index->refresh;
 is( $twitter->count, 15, '15 created' );
 
 ok( $twitter->filter( { term => { name => 'mo' } } )->delete, 'run delete' );
+sleep 5; # wait for delete action to finish
 
 is( $twitter->filter( { term => { name => 'mo' } } )->count,
     0, 'none remain' );

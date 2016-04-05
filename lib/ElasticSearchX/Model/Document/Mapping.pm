@@ -11,12 +11,18 @@ sub maptc {
     $constraint ||= find_type_constraint('Str');
     ( my $name = $constraint->name ) =~ s/\[.*\]/\[\]/;
     my $sub = $MAPPING{$name};
+    my %ret;
     if ( !$sub && $constraint->has_parent ) {
-        return maptc( $attr, $constraint->parent );
+        %ret = maptc( $attr, $constraint->parent );
     }
     elsif ($sub) {
-        return $sub->( $attr, $constraint );
+        %ret = $sub->( $attr, $constraint );
     }
+    # the below fix may not be complete because of type 'object' with nested structures
+    if ( $ret{type} ne 'string' ) {
+        delete $ret{ignore_above};
+    }
+    return %ret;
 }
 
 $MAPPING{Any} = sub {
@@ -24,7 +30,6 @@ $MAPPING{Any} = sub {
     my ( $attr, $tc ) = @_;
 
     my %mapping = (
-        store => $attr->store,
         $attr->index            ? ( index          => $attr->index )   : (),
         $attr->type eq 'object' ? ( dynamic        => $attr->dynamic ) : (),
         $attr->boost            ? ( boost          => $attr->boost )   : (),
@@ -50,7 +55,7 @@ $MAPPING{Str} = sub {
                     $attr->not_analyzed
                     ? (
                         $attr->name => {
-                            store        => $attr->store,
+#                            store        => $attr->store,
                             index        => 'not_analyzed',
                             ignore_above => 2048,
                             doc_values   => \1,
@@ -60,7 +65,7 @@ $MAPPING{Str} = sub {
                             $attr->boost ? ( boost => $attr->boost ) : (),
                             type => $attr->type,
                         }
-                        )
+                      )
                     : ()
                 ),
                 analyzed => {
@@ -68,7 +73,7 @@ $MAPPING{Str} = sub {
                     index => 'analyzed',
                     $attr->boost ? ( boost => $attr->boost ) : (),
                     type      => $attr->type,
-                    fielddata => { format => 'disabled' },
+#                    fielddata => { format => 'disabled' },
                     %term,
                     analyzer => shift @analyzer
                 },
@@ -79,10 +84,10 @@ $MAPPING{Str} = sub {
                             index => 'analyzed',
                             $attr->boost ? ( boost => $attr->boost ) : (),
                             type      => $attr->type,
-                            fielddata => { format => 'disabled' },
+#                            fielddata => { format => 'disabled' },
                             %term,
                             analyzer => $_
-                            }
+                        }
                     } @analyzer
                 )
             }

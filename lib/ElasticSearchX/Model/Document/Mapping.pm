@@ -55,7 +55,6 @@ $MAPPING{Str} = sub {
                     $attr->not_analyzed
                     ? (
                         $attr->name => {
-#                            store        => $attr->store,
                             index        => 'not_analyzed',
                             ignore_above => 2048,
                             doc_values   => \1,
@@ -73,7 +72,6 @@ $MAPPING{Str} = sub {
                     index => 'analyzed',
                     $attr->boost ? ( boost => $attr->boost ) : (),
                     type      => $attr->type,
-#                    fielddata => { format => 'disabled' },
                     %term,
                     analyzer => shift @analyzer
                 },
@@ -84,7 +82,6 @@ $MAPPING{Str} = sub {
                             index => 'analyzed',
                             $attr->boost ? ( boost => $attr->boost ) : (),
                             type      => $attr->type,
-#                            fielddata => { format => 'disabled' },
                             %term,
                             analyzer => $_
                         }

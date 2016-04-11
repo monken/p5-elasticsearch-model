@@ -185,7 +185,6 @@ sub _set_doc_values {
     if ( $mapping{type} eq 'string'
         && ( $mapping{index} || 'analyzed' ) eq 'analyzed' )
     {
-        $mapping{fielddata} = { format => 'disabled' };
         delete $mapping{doc_values};
     }
     elsif ( $mapping{type} eq 'multi_field' ) {

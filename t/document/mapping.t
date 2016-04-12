@@ -75,9 +75,6 @@ is_deeply(
                 fields     => {
                     analyzed => {
                         analyzer  => 'standard',
-                        fielddata => {
-                            format => 'disabled',
-                        },
                         index => 'analyzed',
                         store => 'yes',
                         type  => 'string',
@@ -86,7 +83,6 @@ is_deeply(
                         doc_values   => \1,
                         ignore_above => 2048,
                         index        => 'not_analyzed',
-                        store        => 'yes',
                         type         => 'string',
                     },
                 },
@@ -113,14 +109,10 @@ is_deeply(
                         doc_values   => \1,
                         ignore_above => 2048,
                         index        => 'not_analyzed',
-                        store        => 'yes',
                         type         => 'string',
                     },
                     analyzed => {
                         analyzer  => 'lowercase',
-                        fielddata => {
-                            format => 'disabled',
-                        },
                         index       => 'analyzed',
                         store       => 'yes',
                         term_vector => 'with_positions_offsets',
@@ -131,19 +123,16 @@ is_deeply(
             },
             date => {
                 doc_values => \1,
-                store      => 'yes',
                 type       => 'date',
             },
             default => {
                 doc_values   => \1,
                 ignore_above => 2048,
                 index        => 'not_analyzed',
-                store        => 'yes',
                 type         => 'string',
             },
             loc => {
                 doc_values   => \1,
-                ignore_above => 2048,
                 type         => 'geo_point',
             },
             module => {
@@ -154,9 +143,6 @@ is_deeply(
                         fields     => {
                             analyzed => {
                                 analyzer  => 'standard',
-                                fielddata => {
-                                    format => 'disabled',
-                                },
                                 index => 'analyzed',
                                 store => 'yes',
                                 type  => 'string',
@@ -165,7 +151,6 @@ is_deeply(
                                 doc_values   => \1,
                                 ignore_above => 2048,
                                 index        => 'not_analyzed',
-                                store        => 'yes',
                                 type         => 'string',
                             },
                         },
@@ -182,9 +167,6 @@ is_deeply(
                         fields     => {
                             analyzed => {
                                 analyzer  => 'standard',
-                                fielddata => {
-                                    format => 'disabled',
-                                },
                                 index => 'analyzed',
                                 store => 'yes',
                                 type  => 'string',
@@ -193,7 +175,6 @@ is_deeply(
                                 doc_values   => \1,
                                 ignore_above => 2048,
                                 index        => 'not_analyzed',
-                                store        => 'yes',
                                 type         => 'string',
                             },
                         },
@@ -207,21 +188,16 @@ is_deeply(
                 ignore_above   => 2048,
                 include_in_all => \0,
                 index          => 'not_analyzed',
-                store          => 'yes',
                 type           => 'string',
             },
             profile => {
                 dynamic   => \0,
-                fielddata => {
-                    format => 'disabled',
-                },
                 include_in_root => \1,
                 properties      => {
                     id => {
                         doc_values   => \1,
                         ignore_above => 2048,
                         index        => 'not_analyzed',
-                        store        => 'yes',
                         type         => 'string',
                     },
                 },
@@ -229,28 +205,20 @@ is_deeply(
             },
             res => {
                 dynamic   => \0,
-                fielddata => {
-                    format => 'disabled',
-                },
                 properties => {
                     bugtracker => {
                         dynamic   => \0,
-                        fielddata => {
-                            format => 'disabled',
-                        },
                         properties => {
                             mailto => {
                                 doc_values   => \1,
                                 ignore_above => 2048,
                                 index        => 'not_analyzed',
-                                store        => 'yes',
                                 type         => 'string',
                             },
                             web => {
                                 doc_values   => \1,
                                 ignore_above => 2048,
                                 index        => 'not_analyzed',
-                                store        => 'yes',
                                 type         => 'string',
                             },
                         },
@@ -260,14 +228,12 @@ is_deeply(
                         doc_values   => \1,
                         ignore_above => 2048,
                         index        => 'not_analyzed',
-                        store        => 'yes',
                         type         => 'string',
                     },
                     license => {
                         doc_values   => \1,
                         ignore_above => 2048,
                         index        => 'not_analyzed',
-                        store        => 'yes',
                         type         => 'string',
                     },
                 },

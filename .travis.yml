@@ -16,9 +16,15 @@ notifications:
     on_failure: always
   irc: "irc.perl.org#metacpan-travis"
 
+env:
+  - ES_VERSION=2.3.1
+
 before_install:
   - cpanm -n Devel::Cover::Report::Coveralls
   - cpanm -n Carton
+  - "mkdir /tmp/elasticsearch"
+  - "wget -O - https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/${ES_VERSION}/elasticsearch-${ES_VERSION}.tar.gz | tar xz --directory=/tmp/elasticsearch --strip-components=1"
+  - "/tmp/elasticsearch/bin/elasticsearch -d -D es.path.data=/tmp -D es.index.store.type=memory -D es.discovery.zen.ping.multicast.enabled=false -D es.http.port=9900 -D es.cluster.name=testing"
 
 install:
   - 'carton install'
@@ -30,6 +36,3 @@ script:
 
 after_success:
   - cover -report coveralls
-
-services:
-  - elasticsearch

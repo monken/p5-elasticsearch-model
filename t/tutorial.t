@@ -117,7 +117,7 @@ is(
 {
 
     package main;
-    my $model = MyModel::Reindex->new( es => $ENV{ES} || ':9200' );
+    my $model = MyModel::Reindex->new( es => $ENV{ES} || ':9900' );
     $model->deploy( delete => 1 );
     my $old = $model->index('twitter');
     my $new = $model->index('twitter_v2');

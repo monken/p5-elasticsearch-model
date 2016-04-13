@@ -38,7 +38,6 @@ sub deploy {
             );
         };
         sleep(1);
-
         while ( my ( $k, $v ) = each %$mapping ) {
             $t->perform_request(
                 {

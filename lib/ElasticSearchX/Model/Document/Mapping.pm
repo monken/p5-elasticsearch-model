@@ -11,12 +11,19 @@ sub maptc {
     $constraint ||= find_type_constraint('Str');
     ( my $name = $constraint->name ) =~ s/\[.*\]/\[\]/;
     my $sub = $MAPPING{$name};
+    my %ret;
     if ( !$sub && $constraint->has_parent ) {
-        return maptc( $attr, $constraint->parent );
+        %ret = maptc( $attr, $constraint->parent );
     }
     elsif ($sub) {
-        return $sub->( $attr, $constraint );
+        %ret = $sub->( $attr, $constraint );
     }
+
+    if ( $ret{type} ne 'string' ) {
+        delete $ret{ignore_above};
+    }
+
+    return %ret;
 }
 
 $MAPPING{Any} = sub {
@@ -24,7 +31,6 @@ $MAPPING{Any} = sub {
     my ( $attr, $tc ) = @_;
 
     my %mapping = (
-        store => $attr->store,
         $attr->index            ? ( index          => $attr->index )   : (),
         $attr->type eq 'object' ? ( dynamic        => $attr->dynamic ) : (),
         $attr->boost            ? ( boost          => $attr->boost )   : (),
@@ -50,7 +56,6 @@ $MAPPING{Str} = sub {
                     $attr->not_analyzed
                     ? (
                         $attr->name => {
-                            store        => $attr->store,
                             index        => 'not_analyzed',
                             ignore_above => 2048,
                             doc_values   => \1,
@@ -60,29 +65,29 @@ $MAPPING{Str} = sub {
                             $attr->boost ? ( boost => $attr->boost ) : (),
                             type => $attr->type,
                         }
-                        )
+                      )
                     : ()
                 ),
                 analyzed => {
                     store => $attr->store,
                     index => 'analyzed',
+                    type  => $attr->type,
                     $attr->boost ? ( boost => $attr->boost ) : (),
-                    type      => $attr->type,
-                    fielddata => { format => 'disabled' },
                     %term,
-                    analyzer => shift @analyzer
+                    analyzer => shift @analyzer,
+                    $attr->type eq 'string'
+                    ? ( fielddata => { format => 'disabled' } ) : (),
                 },
                 (
                     map {
                         $_ => {
                             store => $attr->store,
                             index => 'analyzed',
+                            type  => $attr->type,
                             $attr->boost ? ( boost => $attr->boost ) : (),
-                            type      => $attr->type,
-                            fielddata => { format => 'disabled' },
                             %term,
                             analyzer => $_
-                            }
+                        }
                     } @analyzer
                 )
             }
@@ -183,8 +188,10 @@ sub _set_doc_values {
     if ( $mapping{type} eq 'string'
         && ( $mapping{index} || 'analyzed' ) eq 'analyzed' )
     {
-        $mapping{fielddata} = { format => 'disabled' };
         delete $mapping{doc_values};
+    }
+    elsif ( $mapping{type} eq 'multi_field' ) {
+        delete $mapping{fielddata};
     }
     else {
         $mapping{doc_values} = \1;

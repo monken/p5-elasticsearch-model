@@ -40,15 +40,14 @@ subtype TimestampField,
     as Dict [
     enabled => Bool,
     path    => Optional [Str],
-    store   => Optional [Bool],
     index   => Optional [Str],
     slurpy HashRef,
     ];
 coerce TimestampField, from Int, via {
-    { enabled => 1, store => 1 };
+    { enabled => 1 };
 };
 coerce TimestampField, from Str, via {
-    { enabled => 1, path => $_, store => 1 };
+    { enabled => 1, path => $_ };
 };
 coerce TimestampField, from HashRef, via {
     { enabled => 1, %$_ };

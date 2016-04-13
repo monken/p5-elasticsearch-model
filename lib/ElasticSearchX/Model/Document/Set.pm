@@ -199,12 +199,28 @@ sub delete {
     $qs = $self->_build_qs($qs);
     my $query = $self->_build_query;
     delete $query->{_source};
-    return $self->es->delete_by_query(
+
+    my %idx_type = (
         index => $self->index->name,
-        type  => $self->type->short_name,
-        body  => $query,
+        type  => $self->type->short_name
+    );
+
+    my $sc = $self->es->scroll_helper(
+        search_type => 'scan',
+        body        => $self->_build_query,
+        size        => 500,
+        %idx_type,
         %$qs,
     );
+
+    my @ids;
+    while ( my @d = $sc->next(500) ) {
+        push @ids => map { $_->{_id} } @d;
+    }
+
+    my $bulk = $self->es->bulk_helper(%idx_type);
+    $bulk->delete_ids(@ids);
+    return $bulk->flush;
 }
 
 sub scroll {

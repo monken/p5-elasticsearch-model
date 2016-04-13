@@ -72,7 +72,7 @@ is_deeply(
         include_in_root => \1,
         properties      => {
             name => {
-                fields     => {
+                fields => {
                     analyzed => {
                         analyzer  => 'standard',
                         index     => 'analyzed',
@@ -105,7 +105,7 @@ is_deeply(
         },
         properties => {
             abstract => {
-                fields     => {
+                fields => {
                     abstract => {
                         doc_values   => \1,
                         ignore_above => 2048,
@@ -113,7 +113,7 @@ is_deeply(
                         type         => 'string',
                     },
                     analyzed => {
-                        analyzer  => 'lowercase',
+                        analyzer    => 'lowercase',
                         index       => 'analyzed',
                         store       => 'yes',
                         term_vector => 'with_positions_offsets',
@@ -134,20 +134,20 @@ is_deeply(
                 type         => 'string',
             },
             loc => {
-                doc_values   => \1,
-                type         => 'geo_point',
+                doc_values => \1,
+                type       => 'geo_point',
             },
             module => {
                 dynamic         => \0,
                 include_in_root => \1,
                 properties      => {
                     name => {
-                        fields     => {
+                        fields => {
                             analyzed => {
                                 analyzer  => 'standard',
-                                index => 'analyzed',
-                                store => 'yes',
-                                type  => 'string',
+                                index     => 'analyzed',
+                                store     => 'yes',
+                                type      => 'string',
                                 fielddata => { format => 'disabled' },
                             },
                             name => {
@@ -167,13 +167,13 @@ is_deeply(
                 include_in_root => \1,
                 properties      => {
                     name => {
-                        fields     => {
+                        fields => {
                             analyzed => {
                                 analyzer  => 'standard',
-                                index => 'analyzed',
-                                store => 'yes',
-                                type  => 'string',
-                                fielddata   => { format => 'disabled' },
+                                index     => 'analyzed',
+                                store     => 'yes',
+                                type      => 'string',
+                                fielddata => { format => 'disabled' },
                             },
                             name => {
                                 doc_values   => \1,
@@ -195,7 +195,7 @@ is_deeply(
                 type           => 'string',
             },
             profile => {
-                dynamic   => \0,
+                dynamic         => \0,
                 include_in_root => \1,
                 properties      => {
                     id => {
@@ -208,10 +208,10 @@ is_deeply(
                 type => 'nested',
             },
             res => {
-                dynamic   => \0,
+                dynamic    => \0,
                 properties => {
                     bugtracker => {
-                        dynamic   => \0,
+                        dynamic    => \0,
                         properties => {
                             mailto => {
                                 doc_values   => \1,

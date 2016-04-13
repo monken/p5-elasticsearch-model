@@ -38,7 +38,8 @@ throws_ok { $version1->update } qr/Conflict/;
             warn @_;
         }
     };
-    ok( $version1->update( { version_type => "force", version => undef } ), 'unset version' );
+    ok( $version1->update( { version_type => "force", version => undef } ),
+        'unset version' );
 }
 
 throws_ok { $version1->update( { version => $version1->_version - 1 } ) }
@@ -47,8 +48,12 @@ qr/illegal version value \[\-1\]/;
 # shouldn't the correct version be 2 ? (it's currently 0 and being forced to 0 again)
 # we can alternatively do { version_type => "force", version => 2 }
 # -- Mickey
-ok( $version1->update( { version_type => "force", version => $version1->_version } ),
-    'set correct version' );
+ok(
+    $version1->update(
+        { version_type => "force", version => $version1->_version }
+    ),
+    'set correct version'
+);
 
 throws_ok { $version1->create } qr/Conflict/;
 

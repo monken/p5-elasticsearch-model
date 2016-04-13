@@ -65,7 +65,7 @@ $MAPPING{Str} = sub {
                             $attr->boost ? ( boost => $attr->boost ) : (),
                             type => $attr->type,
                         }
-                      )
+                        )
                     : ()
                 ),
                 analyzed => {
@@ -76,7 +76,8 @@ $MAPPING{Str} = sub {
                     %term,
                     analyzer => shift @analyzer,
                     $attr->type eq 'string'
-                    ? ( fielddata => { format => 'disabled' } ) : (),
+                    ? ( fielddata => { format => 'disabled' } )
+                    : (),
                 },
                 (
                     map {
@@ -87,7 +88,7 @@ $MAPPING{Str} = sub {
                             $attr->boost ? ( boost => $attr->boost ) : (),
                             %term,
                             analyzer => $_
-                        }
+                            }
                     } @analyzer
                 )
             }

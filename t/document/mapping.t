@@ -75,9 +75,10 @@ is_deeply(
                 fields     => {
                     analyzed => {
                         analyzer  => 'standard',
-                        index => 'analyzed',
-                        store => 'yes',
-                        type  => 'string',
+                        index     => 'analyzed',
+                        store     => 'yes',
+                        type      => 'string',
+                        fielddata => { format => 'disabled' },
                     },
                     name => {
                         doc_values   => \1,
@@ -117,6 +118,7 @@ is_deeply(
                         store       => 'yes',
                         term_vector => 'with_positions_offsets',
                         type        => 'string',
+                        fielddata   => { format => 'disabled' },
                     },
                 },
                 type => 'multi_field',
@@ -146,6 +148,7 @@ is_deeply(
                                 index => 'analyzed',
                                 store => 'yes',
                                 type  => 'string',
+                                fielddata => { format => 'disabled' },
                             },
                             name => {
                                 doc_values   => \1,
@@ -170,6 +173,7 @@ is_deeply(
                                 index => 'analyzed',
                                 store => 'yes',
                                 type  => 'string',
+                                fielddata   => { format => 'disabled' },
                             },
                             name => {
                                 doc_values   => \1,

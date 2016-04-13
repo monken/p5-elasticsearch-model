@@ -18,10 +18,11 @@ sub maptc {
     elsif ($sub) {
         %ret = $sub->( $attr, $constraint );
     }
-    # the below fix may not be complete because of type 'object' with nested structures
+
     if ( $ret{type} ne 'string' ) {
         delete $ret{ignore_above};
     }
+
     return %ret;
 }
 
@@ -70,18 +71,20 @@ $MAPPING{Str} = sub {
                 analyzed => {
                     store => $attr->store,
                     index => 'analyzed',
+                    type  => $attr->type,
                     $attr->boost ? ( boost => $attr->boost ) : (),
-                    type      => $attr->type,
                     %term,
-                    analyzer => shift @analyzer
+                    analyzer => shift @analyzer,
+                    $attr->type eq 'string'
+                    ? ( fielddata => { format => 'disabled' } ) : (),
                 },
                 (
                     map {
                         $_ => {
                             store => $attr->store,
                             index => 'analyzed',
+                            type  => $attr->type,
                             $attr->boost ? ( boost => $attr->boost ) : (),
-                            type      => $attr->type,
                             %term,
                             analyzer => $_
                         }

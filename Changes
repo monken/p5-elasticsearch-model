@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.0.0     2016-04-13 09:55:00-04:00 America/Toronto
   - Adapted module & test suite for Elasticsearch 2.x (Mickey Nasriachi)
 
 0.2.2     2015-05-02 12:21:38-04:00 America/Toronto

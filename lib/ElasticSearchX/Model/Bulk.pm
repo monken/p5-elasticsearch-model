@@ -77,7 +77,8 @@ sub clear {
 }
 
 sub DEMOLISH {
-    my $self = shift;
+    my ($self, $in_gd) = @_;
+    return if $in_gd;
     $self->commit if $self->has_stash;
 }
 
@@ -133,7 +134,7 @@ The L<Search::Elasticsearch> object.
 
 =head2 put( $doc, { %qs } )
 
-Put a document. Accepts a document object (see 
+Put a document. Accepts a document object (see
 L<ElasticSearchX::Model::Document::Set/new_document>) or a
 HashRef for better performance.
 

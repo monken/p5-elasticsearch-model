@@ -46,7 +46,8 @@ ok( $idx = $model->index('twitter_v1'), 'Get index twitter_v1' );
 
 is_deeply(
     $idx->types,
-    {   user  => MyModel::Twitter::User->meta,
+    {
+        user  => MyModel::Twitter::User->meta,
         tweet => MyModel::Twitter::Tweet->meta
     },
     'Types loaded ok'

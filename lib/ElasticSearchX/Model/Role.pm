@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Role;
+
 use Moose::Role;
 use Search::Elasticsearch;
 use ElasticSearchX::Model::Index;
@@ -9,53 +10,62 @@ has es => ( is => 'rw', lazy_build => 1, coerce => 1, isa => ES );
 
 sub _build_es {
     Search::Elasticsearch->new(
-        nodes     => '127.0.0.1:9200',
-        cxn     => 'HTTPTiny',
+        nodes => $ENV{ES} || '127.0.0.1:9200',
+        cxn => 'HTTPTiny',
     );
 }
 
 sub deploy {
     my ( $self, %params ) = @_;
     my $t = $self->es->transport;
+
     foreach my $name ( $self->meta->get_index_list ) {
         my $index = $self->index($name);
         next if ( $index->alias_for && $name eq $index->alias_for );
         $name = $index->alias_for if ( $index->alias_for );
         local $@;
-        eval {
-            $self->es->indices->delete( index => $name )
-        } if ( $params{delete} );
+        eval { $self->es->indices->delete( index => $name ) }
+            if ( $params{delete} );
         my $dep     = $index->deployment_statement;
         my $mapping = delete $dep->{mappings};
         eval {
             $t->perform_request(
-                {   method => 'PUT',
+                {
+                    method => 'PUT',
                     path   => "/$name",
                     body   => $dep,
                 }
             );
         };
         sleep(1);
+
         while ( my ( $k, $v ) = each %$mapping ) {
             $t->perform_request(
-                {   method => 'PUT',
+                {
+                    method => 'PUT',
                     path   => "/$name/$k/_mapping",
                     body   => { $k => $v },
                 }
             );
         }
         if ( my $alias = $index->alias_for ) {
-            my @aliases
-                = keys %{ $self->es->indices->get_aliases( index => $index->name, ignore => [404] )
-                    || {} };
+            my @aliases = keys %{
+                $self->es->indices->get_aliases(
+                    index  => $index->name,
+                    ignore => [404]
+                    )
+                    || {}
+            };
             my $actions = [
-                (   map {
+                (
+                    map {
                         { remove => { index => $_, alias => $index->name } }
-                        } @aliases
+                    } @aliases
                 ),
                 { add => { index => $alias, alias => $index->name } }
             ];
-            $self->es->indices->update_aliases( body => { actions => $actions } );
+            $self->es->indices->update_aliases(
+                body => { actions => $actions } );
         }
     }
     return 1;
@@ -67,10 +77,10 @@ sub bulk {
 }
 
 sub es_version {
-    my $self = shift;
+    my $self   = shift;
     my $string = $self->es->info->{version}->{number};
     $string =~ s/RC//g;
-    return version->parse( $string )->numify;
+    return version->parse($string)->numify;
 }
 
 1;

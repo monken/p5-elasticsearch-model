@@ -3,21 +3,26 @@ use Moose;
 use ElasticSearchX::Model::Document;
 use MooseX::Types::Common::String qw(:all);
 
-has name => ( is => 'ro', index => 'analyzed', isa => LowerCaseSimpleStr, coerce => 1 );
+has name => (
+    is     => 'ro',
+    index  => 'analyzed',
+    isa    => LowerCaseSimpleStr,
+    coerce => 1
+);
 
 MyModel::MyType->meta->make_immutable;
+
 package MyModel::MyClass;
 use Moose;
 use ElasticSearchX::Model::Document;
 use ElasticSearchX::Model::Document::Types qw(:all);
 use MooseX::Types::Moose qw(:all);
 
-has module => ( is => 'ro', isa => ArrayRef[Type ['MyType']] );
+has module => ( is => 'ro', isa => ArrayRef [ Type ['MyType'] ] );
 has hash => ( is => 'ro', isa => 'HashRef' );
-has hash_dynamic =>
-    ( is => 'ro', isa => 'HashRef', dynamic => 1 );
-has author => ( is => 'ro' );
-has extra => ( is => 'ro', source_only => 1, dynamic => 1 );
+has hash_dynamic => ( is => 'ro', isa         => 'HashRef', dynamic => 1 );
+has author       => ( is => 'ro' );
+has extra        => ( is => 'ro', source_only => 1,         dynamic => 1 );
 has [qw(bool1 bool2)] => ( is => 'ro', isa => 'Bool' );
 has array => ( is => 'ro', isa => 'ArrayRef[Num]', dynamic => 1 );
 
@@ -42,17 +47,18 @@ my $model = MyModel->new;
 {
     my $meta = MyModel::MyClass->meta;
     my $obj  = MyModel::MyClass->new(
-        module => [MyModel::MyType->new( name => 'foo' )],
+        module => [ MyModel::MyType->new( name => 'foo' ) ],
         author => 'me',
     );
     my $attr = $meta->get_attribute('module');
-    ok( $attr->has_deflator, 'module has deflator' );
-    ok( $attr->has_type_constraint,
-        'module has tc' );
-    ok($attr->is_inflated($obj), 'module is inflated');
-    is_deeply( $meta->get_data($obj),
-        { author => 'me', module => [{ name => 'foo' }] },
-        'deflated ok' );
+    ok( $attr->has_deflator,        'module has deflator' );
+    ok( $attr->has_type_constraint, 'module has tc' );
+    ok( $attr->is_inflated($obj),   'module is inflated' );
+    is_deeply(
+        $meta->get_data($obj),
+        { author => 'me', module => [ { name => 'foo' } ] },
+        'deflated ok'
+    );
 }
 
 {
@@ -62,7 +68,8 @@ my $model = MyModel->new;
         index        => $model->index('static')
     );
 
-    is( MyModel::MyClass->meta->get_attribute('hash')->deflate($doc),
+    is(
+        MyModel::MyClass->meta->get_attribute('hash')->deflate($doc),
         '{"foo":"bar"}',
         'static attr deflates to json'
     );
@@ -107,9 +114,9 @@ my $model = MyModel->new;
         index => $model->index('static')
     );
     my $deflated1 = $doc->meta->get_attribute('bool1')->deflate($doc);
-    ok($deflated1, "deflated is true");
+    ok( $deflated1, "deflated is true" );
     my $deflated2 = $doc->meta->get_attribute('bool2')->deflate($doc);
-    ok($deflated2, "deflated is false");
+    ok( $deflated2, "deflated is false" );
 }
 
 {
@@ -118,7 +125,7 @@ my $model = MyModel->new;
         index => $model->index('static'),
     );
     my $deflate = $doc->meta->get_attribute('array')->deflate($doc);
-    is_deeply($deflate, [qw(1 2 3)]);
+    is_deeply( $deflate, [qw(1 2 3)] );
 }
 
 done_testing;

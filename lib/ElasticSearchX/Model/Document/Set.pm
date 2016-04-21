@@ -31,6 +31,12 @@ has [qw(fields sort)] => (
     traits => [qw(ChainedClone)]
 );
 
+has source => (
+    is      => 'rw',
+    traits  => [qw(ChainedClone)],
+    default => sub { \1 },
+);
+
 sub add_sort { push( @{ $_[0]->sort }, $_[1] ); return $_[0]; }
 
 sub add_field { push( @{ $_[0]->fields }, $_[1] ); return $_[0]; }
@@ -68,20 +74,19 @@ sub _build_qs {
 
 sub _build_query {
     my $self = shift;
-    my $query
-        = { query => $self->query ? $self->query : { match_all => {} } };
-    $query = { query => { filtered => { filter => $self->filter, query => $query->{query} } } }
-        if $self->filter;
-    my $q = {
-        %$query,
+    my $q = $self->query || { match_all => {} };
+    if ( my $f = $self->filter ) {
+        $q = { filtered => { query => $q, filter => $f } };
+    }
+    return {
+        query   => $q,
+        _source => $self->source,
         $self->size   ? ( size   => $self->size )   : (),
         $self->from   ? ( from   => $self->from )   : (),
         $self->fields ? ( fields => $self->fields ) : (),
         $self->sort   ? ( sort   => $self->sort )   : (),
         $self->mixin ? ( %{ $self->mixin } ) : (),
     };
-
-    return $q;
 }
 
 sub put {
@@ -102,8 +107,8 @@ sub inflate_result {
     $index = $index ? $self->model->index($index) : $self->index;
     $type  = $type  ? $index->get_type($type)     : $self->type;
     my $doc = $type->inflate_result( $index, $res );
-    unless($res->{_source}) {
-        $doc->_loaded_attributes({ map { $_ => 1 } @{$self->fields} });
+    unless ( $res->{_source} ) {
+        $doc->_loaded_attributes( { map { $_ => 1 } @{ $self->fields } } );
     }
     return $doc;
 }
@@ -129,7 +134,7 @@ sub get {
                       $_->has_deflator
                     ? $_->deflate( $self, $args->{ $_->name } )
                     : $args->{ $_->name }
-                } @fields
+            } @fields
         );
     }
 
@@ -150,9 +155,10 @@ sub all {
     $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
     my $res = $self->es->search(
-        {   index => $index,
-            type => $type,
-            body   => $self->_build_query,
+        {
+            index   => $index,
+            type    => $type,
+            body    => $self->_build_query,
             version => 1,
             %{ $qs || {} },
         }
@@ -175,10 +181,13 @@ sub count {
     my ( $self, $qs ) = @_;
     $qs = $self->_build_qs($qs);
     my ( $index, $type ) = ( $self->index->name, $self->type->short_name );
+    my $query = $self->_build_query;
+    delete $query->{_source};
     my $res = $self->es->count(
-        {   index => $index,
-            type => $type,
-            body   => { %{ $self->_build_query } },
+        {
+            index => $index,
+            type  => $type,
+            body  => $query,
             %$qs,
         }
     );
@@ -189,12 +198,29 @@ sub delete {
     my ( $self, $qs ) = @_;
     $qs = $self->_build_qs($qs);
     my $query = $self->_build_query;
-    return $self->es->delete_by_query(
+    delete $query->{_source};
+
+    my %idx_type = (
         index => $self->index->name,
-        type  => $self->type->short_name,
-        body  => $query,
+        type  => $self->type->short_name
+    );
+
+    my $sc = $self->es->scroll_helper(
+        search_type => 'scan',
+        body        => $self->_build_query,
+        size        => 500,
+        %idx_type,
         %$qs,
     );
+
+    my @ids;
+    while ( my @d = $sc->next(500) ) {
+        push @ids => map { $_->{_id} } @d;
+    }
+
+    my $bulk = $self->es->bulk_helper(%idx_type);
+    $bulk->delete_ids(@ids);
+    return $bulk->flush;
 }
 
 sub scroll {

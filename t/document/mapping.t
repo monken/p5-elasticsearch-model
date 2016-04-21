@@ -12,11 +12,12 @@ use MooseX::Types -declare => [ 'Resources', 'Profile' ];
 use MooseX::Types::Structured qw(Dict Tuple Optional);
 use MooseX::Types::Moose qw/Int Str ArrayRef HashRef Undef/;
 
-subtype Resources, as Dict [
+subtype Resources,
+    as Dict [
     license => Optional [ ArrayRef [Str] ],
     homepage => Optional [Str],
     bugtracker => Optional [ Dict [ web => Str, mailto => Str ] ]
-];
+    ];
 
 subtype Profile, as ArrayRef [ Dict [ id => Str ] ];
 coerce Profile, from HashRef, via { [$_] };
@@ -57,7 +58,8 @@ my $meta = MyClass->meta;
 
 is_deeply(
     [ sort map { $_->name } $meta->get_all_properties ],
-    [   qw(_id _version abstract date default extra loc module modules pod profile res vater)
+    [
+        qw(_id _version abstract date default extra loc module modules pod profile res vater)
     ]
 );
 
@@ -65,28 +67,30 @@ my $module  = $meta->get_attribute('module')->build_property;
 my $modules = $meta->get_attribute('modules')->build_property;
 is_deeply(
     $module,
-    {   _source         => { compress => \1 },
+    {
         dynamic         => \0,
-        type            => 'nested',
         include_in_root => \1,
         properties      => {
             name => {
                 fields => {
                     analyzed => {
-                        analyzer => "standard",
-                        index    => "analyzed",
-                        store    => "yes",
-                        type     => "string",
+                        analyzer  => 'standard',
+                        index     => 'analyzed',
+                        store     => 'yes',
+                        type      => 'string',
+                        fielddata => { format => 'disabled' },
                     },
                     name => {
-                        index => "not_analyzed",
-                        store => "yes",
-                        type  => "string",
-                    }
+                        doc_values   => \1,
+                        ignore_above => 2048,
+                        index        => 'not_analyzed',
+                        type         => 'string',
+                    },
                 },
-                type => "multi_field"
-            }
-        }
+                type => 'multi_field',
+            },
+        },
+        type => 'nested',
     }
 );
 
@@ -94,92 +98,152 @@ is_deeply( $module, $modules );
 
 is_deeply(
     MyClass->meta->mapping,
-    {   _source    => { compress => \1 },
-        _parent    => { type     => 'vater' },
-        dynamic    => \0,
+    {
+        dynamic => \0,
+        _parent => {
+            type => 'vater',
+        },
         properties => {
-            date => {
-                'store' => 'yes',
-                'type'  => 'date'
+            abstract => {
+                fields => {
+                    abstract => {
+                        doc_values   => \1,
+                        ignore_above => 2048,
+                        index        => 'not_analyzed',
+                        type         => 'string',
+                    },
+                    analyzed => {
+                        analyzer    => 'lowercase',
+                        index       => 'analyzed',
+                        store       => 'yes',
+                        term_vector => 'with_positions_offsets',
+                        type        => 'string',
+                        fielddata   => { format => 'disabled' },
+                    },
+                },
+                type => 'multi_field',
             },
-            profile => {
-                type            => 'nested',
-                include_in_root => \1,
-                dynamic         => \0,
-                properties      => {
-                    id => {
-                        index => 'not_analyzed',
-                        store => 'yes',
-                        type  => 'string',
-                    }
-                }
+            date => {
+                doc_values => \1,
+                type       => 'date',
             },
             default => {
-                'index' => 'not_analyzed',
-                'store' => 'yes',
-                'type'  => 'string'
+                doc_values   => \1,
+                ignore_above => 2048,
+                index        => 'not_analyzed',
+                type         => 'string',
+            },
+            loc => {
+                doc_values => \1,
+                type       => 'geo_point',
+            },
+            module => {
+                dynamic         => \0,
+                include_in_root => \1,
+                properties      => {
+                    name => {
+                        fields => {
+                            analyzed => {
+                                analyzer  => 'standard',
+                                index     => 'analyzed',
+                                store     => 'yes',
+                                type      => 'string',
+                                fielddata => { format => 'disabled' },
+                            },
+                            name => {
+                                doc_values   => \1,
+                                ignore_above => 2048,
+                                index        => 'not_analyzed',
+                                type         => 'string',
+                            },
+                        },
+                        type => 'multi_field',
+                    },
+                },
+                type => 'nested',
+            },
+            modules => {
+                dynamic         => \0,
+                include_in_root => \1,
+                properties      => {
+                    name => {
+                        fields => {
+                            analyzed => {
+                                analyzer  => 'standard',
+                                index     => 'analyzed',
+                                store     => 'yes',
+                                type      => 'string',
+                                fielddata => { format => 'disabled' },
+                            },
+                            name => {
+                                doc_values   => \1,
+                                ignore_above => 2048,
+                                index        => 'not_analyzed',
+                                type         => 'string',
+                            },
+                        },
+                        type => 'multi_field',
+                    },
+                },
+                type => 'nested',
             },
             pod => {
-                'index'        => 'not_analyzed',
-                'store'        => 'yes',
-                'type'         => 'string',
+                doc_values     => \1,
+                ignore_above   => 2048,
                 include_in_all => \0,
+                index          => 'not_analyzed',
+                type           => 'string',
             },
-            loc      => { 'type' => 'geo_point' },
-            module   => $module,
-            modules  => $module,
-            abstract => {
-                'type' => 'multi_field',
-                fields => {
-                    analyzed => {
-
-                        'index'     => 'analyzed',
-                        analyzer    => 'lowercase',
-                        'store'     => 'yes',
-                        'type'      => 'string',
-                        term_vector => 'with_positions_offsets',
+            profile => {
+                dynamic         => \0,
+                include_in_root => \1,
+                properties      => {
+                    id => {
+                        doc_values   => \1,
+                        ignore_above => 2048,
+                        index        => 'not_analyzed',
+                        type         => 'string',
                     },
-                    abstract => {
-                        'index' => 'not_analyzed',
-                        'store' => 'yes',
-                        'type'  => 'string'
-                    }
-                }
+                },
+                type => 'nested',
             },
             res => {
                 dynamic    => \0,
-                type       => "object",
                 properties => {
-                    license => {
-                        store => 'yes',
-                        type  => 'string',
-                        index => 'not_analyzed'
-                    },
-                    homepage => {
-
-                        store => 'yes',
-                        type  => 'string',
-                        index => 'not_analyzed'
-                    },
                     bugtracker => {
-                        type       => 'object',
                         dynamic    => \0,
                         properties => {
-                            web => {
-                                store => 'yes',
-                                type  => 'string',
-                                index => 'not_analyzed'
-                            },
                             mailto => {
-                                store => 'yes',
-                                type  => 'string',
-                                index => 'not_analyzed'
+                                doc_values   => \1,
+                                ignore_above => 2048,
+                                index        => 'not_analyzed',
+                                type         => 'string',
                             },
-                        }
-                    }
-                }
-            }
-        }
+                            web => {
+                                doc_values   => \1,
+                                ignore_above => 2048,
+                                index        => 'not_analyzed',
+                                type         => 'string',
+                            },
+                        },
+                        type => 'object',
+                    },
+                    homepage => {
+                        doc_values   => \1,
+                        ignore_above => 2048,
+                        index        => 'not_analyzed',
+                        type         => 'string',
+                    },
+                    license => {
+                        doc_values   => \1,
+                        ignore_above => 2048,
+                        index        => 'not_analyzed',
+                        type         => 'string',
+                    },
+                },
+                type => 'object',
+            },
+        },
     }
 );
 

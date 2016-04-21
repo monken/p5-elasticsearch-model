@@ -27,11 +27,16 @@ has property          => ( is => 'ro', isa => 'Bool', default => 1 );
 has query_property    => ( is => 'ro', isa => 'Bool', default => 0 );
 has field_name =>
     ( is => 'ro', isa => 'Str', lazy => 1, default => sub { shift->name } );
-has isa_arrayref => ( is => 'ro', isa => 'Bool', builder => '_build_isa_arrayref' );
+has isa_arrayref => (
+    is      => 'ro',
+    lazy    => 1,
+    isa     => 'Bool',
+    builder => '_build_isa_arrayref'
+);
 
 sub _build_isa_arrayref {
     my $self = shift;
-    my $tc = $self->type_constraint;
+    my $tc   = $self->type_constraint;
     return 0 unless $tc;
     return $tc->is_a_type_of("ArrayRef");
 }
@@ -74,7 +79,7 @@ after _process_options => sub {
 sub mapping {
     my $self = shift;
     return ( $self->name => $self->build_property )
-        unless ( $self->source_only  || $self->parent );
+        unless ( $self->source_only || $self->parent );
     return ();
 }
 
@@ -82,7 +87,11 @@ sub type_mapping { () }
 
 after install_accessors => sub {
     my $self = shift;
-    return unless($self->associated_class->does_role('ElasticSearchX::Model::Document::Role'));
+    return
+        unless (
+        $self->associated_class->does_role(
+            'ElasticSearchX::Model::Document::Role')
+        );
     $self->associated_class->_add_field_alias(
         $self->name => $self->field_name );
     $self->associated_class->_add_reverse_field_alias(

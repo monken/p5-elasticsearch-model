@@ -1,6 +1,29 @@
+{{$NEXT}}
+
+1.0.0     2016-04-13 09:55:00-04:00 America/Toronto
+  - Adapted module & test suite for Elasticsearch 2.x (Mickey Nasriachi)
+
+0.2.2     2015-05-02 12:21:38-04:00 America/Toronto
+  - Update test suite to keep up with Elasticsearch 1.x behaviour (Olaf Alders)
+
+0.2.1     2015-04-23 21:47:01-04:00 America/Toronto
+  - Added doc_values to all not_analyzed fields and prevented loading of fielddata on analyzed string fields (Clinton Gormley)
+  - Added ignore_above to the not_analyzed string mappings to avoid processing very large strings (Clinton Gormley)
+
+0.2.0     2015-04-18 11:52:23+02:00 Europe/Berlin
+  - Bulk now only commits if there's something in the stash
+
+0.1.9     2015-04-17 14:52:16+02:00 Europe/Berlin
+  - Adds ElasticSearchX::Model::Document::EmbeddedRole (Clinton Gormley)
+
+0.1.8     2015-04-17 11:28:49+02:00 Europe/Berlin
+  - Removes source compression (no longer needed) (Clinton Gormley)
+  - Adds support for source() filtering to Document::Set (Clinton Gormley)
+  - The ES host will now default to ENV{ES} if present (Clinton Gormley)
+
 0.1.8-TRIAL - 2014-04-26
   - Elasticsearch with version less than 0.90 are no longer officially supported and tested
-  - Switch to Search::Elasticsearch from ElasticSearch 
+  - Switch to Search::Elasticsearch from ElasticSearch
 
 0.1.7 - 2013-11-25
   - use Class::Load::load_class instead of MOP::Class (Kent Fredric)

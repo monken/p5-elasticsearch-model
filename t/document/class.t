@@ -12,7 +12,8 @@ use warnings;
 
 is( Foo->meta->get_id_attribute, Foo->meta->get_attribute('name') );
 ok( Foo->meta->get_id_attribute->is_required );
-ok( Foo->meta->get_id_attribute->does(
+ok(
+    Foo->meta->get_id_attribute->does(
         'MooseX::Attribute::LazyInflator::Meta::Role::Attribute')
 );
 done_testing;

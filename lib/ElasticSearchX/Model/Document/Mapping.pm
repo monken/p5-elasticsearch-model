@@ -1,4 +1,5 @@
 package ElasticSearchX::Model::Document::Mapping;
+
 use strict;
 use warnings;
 use Moose::Util::TypeConstraints;
@@ -10,26 +11,34 @@ sub maptc {
     $constraint ||= find_type_constraint('Str');
     ( my $name = $constraint->name ) =~ s/\[.*\]/\[\]/;
     my $sub = $MAPPING{$name};
+    my %ret;
     if ( !$sub && $constraint->has_parent ) {
-        return maptc( $attr, $constraint->parent );
+        %ret = maptc( $attr, $constraint->parent );
     }
     elsif ($sub) {
-        return $sub->( $attr, $constraint );
+        %ret = $sub->( $attr, $constraint );
     }
+
+    if ( $ret{type} ne 'string' ) {
+        delete $ret{ignore_above};
+    }
+
+    return %ret;
 }
 
 $MAPPING{Any} = sub {
 
     my ( $attr, $tc ) = @_;
-    return (
-        store => $attr->store,
-        $attr->index ? ( index => $attr->index ) : (),
-        $attr->type eq 'object' ? ( dynamic => $attr->dynamic ) : (),
-        $attr->boost           ? ( boost          => $attr->boost ) : (),
-        !$attr->include_in_all ? ( include_in_all => \0 )           : (),
+
+    my %mapping = (
+        $attr->index            ? ( index          => $attr->index )   : (),
+        $attr->type eq 'object' ? ( dynamic        => $attr->dynamic ) : (),
+        $attr->boost            ? ( boost          => $attr->boost )   : (),
+        !$attr->include_in_all  ? ( include_in_all => \0 )             : (),
         type => 'string',
         $attr->analyzer->[0] ? ( analyzer => $attr->analyzer->[0] ) : (),
     );
+    return _set_doc_values(%mapping);
 };
 
 $MAPPING{Str} = sub {
@@ -40,13 +49,16 @@ $MAPPING{Str} = sub {
     {
         my @analyzer = @{ $attr->{analyzer} };
         push( @analyzer, 'standard' ) unless (@analyzer);
-        return (
+        return _set_doc_values(
             type   => 'multi_field',
             fields => {
-                (   $attr->not_analyzed
-                    ? ( $attr->name => {
-                            store => $attr->store,
-                            index => 'not_analyzed',
+                (
+                    $attr->not_analyzed
+                    ? (
+                        $attr->name => {
+                            index        => 'not_analyzed',
+                            ignore_above => 2048,
+                            doc_values   => \1,
                             !$attr->include_in_all
                             ? ( include_in_all => \0 )
                             : (),
@@ -59,41 +71,49 @@ $MAPPING{Str} = sub {
                 analyzed => {
                     store => $attr->store,
                     index => 'analyzed',
+                    type  => $attr->type,
                     $attr->boost ? ( boost => $attr->boost ) : (),
-                    type => $attr->type,
                     %term,
-                    analyzer => shift @analyzer
+                    analyzer => shift @analyzer,
+                    $attr->type eq 'string'
+                    ? ( fielddata => { format => 'disabled' } )
+                    : (),
                 },
-                (   map {
+                (
+                    map {
                         $_ => {
                             store => $attr->store,
                             index => 'analyzed',
+                            type  => $attr->type,
                             $attr->boost ? ( boost => $attr->boost ) : (),
-                            type => $attr->type,
                             %term,
                             analyzer => $_
                             }
-                        } @analyzer
+                    } @analyzer
                 )
             }
         );
     }
-    return ( index => 'not_analyzed', %term, maptc( $attr, $tc->parent ) );
+    return _set_doc_values(
+        index        => 'not_analyzed',
+        ignore_above => 2048,
+        %term, maptc( $attr, $tc->parent )
+    );
 };
 
 $MAPPING{Num} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'float' );
+    return _set_doc_values( maptc( $attr, $tc->parent ), type => 'float' );
 };
 
 $MAPPING{Int} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'integer' );
+    return _set_doc_values( maptc( $attr, $tc->parent ), type => 'integer' );
 };
 
 $MAPPING{Bool} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'boolean' );
+    return _set_doc_values( maptc( $attr, $tc->parent ), type => 'boolean' );
 };
 
 $MAPPING{ScalarRef} = sub {
@@ -124,7 +144,7 @@ $MAPPING{'MooseX::Types::Structured::Dict[]'} = sub {
     return (
         %mapping,
         type => $attr->type eq 'nested' ? 'nested' : 'object',
-        dynamic => \( $attr->dynamic ),
+        dynamic    => \( $attr->dynamic ),
         properties => $value,
         $attr->include_in_root   ? ( include_in_root   => \1 ) : (),
         $attr->include_in_parent ? ( include_in_parent => \1 ) : (),
@@ -140,7 +160,7 @@ $MAPPING{'MooseX::Types::ElasticSearch::Location'} = sub {
     my ( $attr, $tc ) = @_;
     my %mapping = maptc( $attr, $tc->parent );
     delete $mapping{$_} for (qw(index store));
-    return ( %mapping, type => 'geo_point' );
+    return ( %mapping, type => 'geo_point', doc_values => \1 );
 };
 
 $MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
@@ -156,5 +176,28 @@ $MAPPING{'ElasticSearchX::Model::Document::Types::Type[]'} = sub {
 
 $MAPPING{'DateTime'} = sub {
     my ( $attr, $tc ) = @_;
-    return ( maptc( $attr, $tc->parent ), type => 'date' );
+    return _set_doc_values(
+        maptc( $attr, $tc->parent ),
+        type       => 'date',
+        doc_values => \1
+    );
 };
+
+sub _set_doc_values {
+    my %mapping = @_;
+
+    if ( $mapping{type} eq 'string'
+        && ( $mapping{index} || 'analyzed' ) eq 'analyzed' )
+    {
+        delete $mapping{doc_values};
+    }
+    elsif ( $mapping{type} eq 'multi_field' ) {
+        delete $mapping{fielddata};
+    }
+    else {
+        $mapping{doc_values} = \1;
+        delete $mapping{fielddata};
+    }
+    return %mapping
+
+}

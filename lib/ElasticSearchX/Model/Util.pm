@@ -1,6 +1,8 @@
 package ElasticSearchX::Model::Util;
+
 use strict;
 use warnings;
+
 use Digest::SHA1;
 
 sub digest {
